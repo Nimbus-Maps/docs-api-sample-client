@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { logError } from './logger';
 
 /**
  * Verify HMAC-SHA256 webhook signature
@@ -31,7 +32,7 @@ export function verifyWebhookSignature(
     // Use timing-safe comparison to prevent timing attacks
     return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
   } catch (error) {
-    console.error('Signature verification error:', error);
+    logError(error, 'Signature verification error');
     return false;
   }
 }

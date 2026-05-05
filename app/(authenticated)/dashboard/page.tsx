@@ -107,10 +107,10 @@ export default function DashboardPage() {
       setQuickCustomerRef('');
       setQuickTitleNumber('');
     },
-    onError: (error: any) => {
+    onError: (error: Error & { status?: number; details?: { documents_in_progress?: Array<{ document_id: string; order_id: string }> } }) => {
       if (error.status === 409 && error.details?.documents_in_progress?.length) {
         const inProgress = error.details.documents_in_progress
-          .map((d: any) => `${d.document_id} (order ${d.order_id.slice(0, 8)}…)`)
+          .map((d) => `${d.document_id} (order ${d.order_id.slice(0, 8)}…)`)
           .join(', ');
         toast.error(`Already in progress: ${inProgress}`);
       } else {

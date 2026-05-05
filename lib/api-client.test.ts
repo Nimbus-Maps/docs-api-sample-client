@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import {
   createDocumentApiClient,
   checkAvailability,
@@ -19,13 +19,13 @@ const createMockApiError = (code = 'INTERNAL_ERROR', message = 'An error occurre
 });
 
 // Helper to build a mock axios client that includes interceptors (createDocumentApiClient registers them)
-const mockClient = (methods: Record<string, jest.Mock> = {}): any => ({
+const mockClient = (methods: Record<string, jest.Mock> = {}): AxiosInstance => ({
   ...methods,
   interceptors: {
     request: { use: jest.fn() },
     response: { use: jest.fn() },
   },
-});
+} as unknown as AxiosInstance);
 
 // Mock axios
 jest.mock('axios');
@@ -115,11 +115,11 @@ describe('API Client', () => {
           status: 404,
           data: createMockApiError('TITLE_NOT_FOUND', 'Title not found'),
         },
-      } as any;
+      } as unknown as AxiosError;
 
       const mockGet = jest.fn().mockRejectedValue(mockError);
       mockedAxios.create = jest.fn().mockReturnValue(mockClient({ get: mockGet }));
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true) as any;
+      mockedAxios.isAxiosError.mockReturnValue(true);
 
       await expect(checkAvailability(accessToken, { title_number: 'INVALID' })).rejects.toThrow(
         'TITLE_NOT_FOUND: Title not found'
@@ -255,21 +255,22 @@ describe('API Client', () => {
             },
           },
         },
-      } as any;
+      } as unknown as AxiosError;
 
       const mockGet = jest.fn().mockRejectedValue(mockError);
       mockedAxios.create = jest.fn().mockReturnValue(mockClient({ get: mockGet }));
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true) as any;
+      mockedAxios.isAxiosError.mockReturnValue(true);
 
       try {
         await checkAvailability(accessToken, { title_number: 'INVALID' });
         fail('Should have thrown error');
-      } catch (error: any) {
-        expect(error.message).toContain('INVALID_REQUEST');
-        expect(error.message).toContain('Invalid title number format');
-        expect(error.code).toBe('INVALID_REQUEST');
-        expect(error.status).toBe(400);
-        expect(error.details).toEqual(['Must be alphanumeric']);
+      } catch (error) {
+        const e = error as Error & { code?: string; status?: number; details?: unknown };
+        expect(e.message).toContain('INVALID_REQUEST');
+        expect(e.message).toContain('Invalid title number format');
+        expect(e.code).toBe('INVALID_REQUEST');
+        expect(e.status).toBe(400);
+        expect(e.details).toEqual(['Must be alphanumeric']);
       }
     });
 
@@ -281,7 +282,7 @@ describe('API Client', () => {
 
       const mockGet = jest.fn().mockRejectedValue(mockError);
       mockedAxios.create = jest.fn().mockReturnValue(mockClient({ get: mockGet }));
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true) as any;
+      mockedAxios.isAxiosError.mockReturnValue(true);
 
       await expect(checkAvailability(accessToken, { title_number: 'DN1234567' })).rejects.toThrow(
         'Network Error'
@@ -293,7 +294,7 @@ describe('API Client', () => {
 
       const mockGet = jest.fn().mockRejectedValue(mockError);
       mockedAxios.create = jest.fn().mockReturnValue(mockClient({ get: mockGet }));
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(false) as any;
+      mockedAxios.isAxiosError.mockReturnValue(false);
 
       await expect(checkAvailability(accessToken, { title_number: 'DN1234567' })).rejects.toThrow(
         'Unknown error occurred'

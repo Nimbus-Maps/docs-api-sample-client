@@ -1,4 +1,4 @@
-import { getIronSession, IronSession, SessionOptions } from 'iron-session';
+import { getIronSession, SessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
 import { env, isProduction } from './env';
 import {

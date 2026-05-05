@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, readdir, unlink, stat } from 'fs/promises';
+import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
 import { SessionData } from './session';
@@ -17,7 +17,7 @@ const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 async function ensureSessionsDir(): Promise<void> {
   try {
     await mkdir(SESSIONS_DIR, { recursive: true });
-  } catch (error) {
+  } catch {
     // Ignore if directory already exists
   }
 }
@@ -58,7 +58,7 @@ export async function loadSession(sessionId: string): Promise<SessionData | null
     }
 
     return sessionData;
-  } catch (error) {
+  } catch {
     // Session file doesn't exist or is invalid
     return null;
   }
@@ -90,7 +90,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
   try {
     const sessionPath = getSessionPath(sessionId);
     await unlink(sessionPath);
-  } catch (error) {
+  } catch {
     // Ignore if file doesn't exist
   }
 }
@@ -117,7 +117,7 @@ export async function cleanupExpiredSessions(): Promise<void> {
         if (sessionData._expiresAt && sessionData._expiresAt < now) {
           await unlink(filePath);
         }
-      } catch (error) {
+      } catch {
         // If we can't read/parse the file, delete it
         try {
           await unlink(filePath);
@@ -126,7 +126,7 @@ export async function cleanupExpiredSessions(): Promise<void> {
         }
       }
     }
-  } catch (error) {
+  } catch {
     // Ignore cleanup errors
   }
 }

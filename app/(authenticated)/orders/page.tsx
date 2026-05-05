@@ -86,7 +86,7 @@ export default function OrdersPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'warning' | 'destructive' | 'secondary' => {
     switch (status) {
       case 'COMPLETED':
         return 'success';
@@ -183,7 +183,7 @@ export default function OrdersPage() {
                 <CardDescription className="mt-2">Order ID: {order.order_id}</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={getStatusColor(order.status) as any}>{order.status}</Badge>
+                <Badge variant={getStatusColor(order.status)}>{order.status}</Badge>
                 {order.status === 'PROCESSING' && (
                   <Button variant="outline" size="sm" onClick={() => refetch()}>
                     <RefreshCw className="h-4 w-4" />

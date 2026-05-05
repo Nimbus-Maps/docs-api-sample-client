@@ -55,12 +55,12 @@ export default function VerifyPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const getMatchBadgeVariant = (match: string | undefined) => {
+  const getMatchBadgeVariant = (match: string | undefined): 'success' | 'destructive' | 'secondary' => {
     if (!match) return 'secondary';
     return match === 'MATCH' ? 'success' : match === 'NO_MATCH' ? 'destructive' : 'secondary';
   };
 
-  const getMatchResultColor = (result: string) => {
+  const getMatchResultColor = (result: string): 'success' | 'warning' | 'destructive' | 'secondary' => {
     switch (result) {
       case 'SINGLE_MATCH':
         return 'success';
@@ -161,7 +161,7 @@ export default function VerifyPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Verification Results</CardTitle>
-              <Badge variant={getMatchResultColor(verifyMutation.data.match_result) as any}>
+              <Badge variant={getMatchResultColor(verifyMutation.data.match_result)}>
                 {verifyMutation.data.match_result.replace('_', ' ')}
               </Badge>
             </div>
@@ -174,19 +174,19 @@ export default function VerifyPage() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Surname Match</p>
-                <Badge variant={getMatchBadgeVariant(verifyMutation.data.surname_match) as any}>
+                <Badge variant={getMatchBadgeVariant(verifyMutation.data.surname_match)}>
                   {verifyMutation.data.surname_match || 'N/A'}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Forename Match</p>
-                <Badge variant={getMatchBadgeVariant(verifyMutation.data.forename_match) as any}>
+                <Badge variant={getMatchBadgeVariant(verifyMutation.data.forename_match)}>
                   {verifyMutation.data.forename_match || 'N/A'}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Middle Name Match</p>
-                <Badge variant={getMatchBadgeVariant(verifyMutation.data.middle_name_match) as any}>
+                <Badge variant={getMatchBadgeVariant(verifyMutation.data.middle_name_match)}>
                   {verifyMutation.data.middle_name_match || 'N/A'}
                 </Badge>
               </div>

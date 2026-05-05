@@ -19,7 +19,7 @@ export async function loggedFetch(
   const method = init?.method?.toUpperCase() || 'GET';
   
   // Extract headers for logging
-  let headers: Record<string, any> = {};
+  let headers: Record<string, string> = {};
   if (init?.headers) {
     if (init.headers instanceof Headers) {
       init.headers.forEach((value, key) => {
@@ -35,7 +35,7 @@ export async function loggedFetch(
   }
   
   // Log body if present (convert to string for logging)
-  let bodyForLogging: any = undefined;
+  let bodyForLogging: unknown = undefined;
   if (init?.body) {
     if (typeof init.body === 'string') {
       bodyForLogging = init.body;
@@ -59,14 +59,14 @@ export async function loggedFetch(
     const duration = Date.now() - startTime;
     
     // Extract response headers
-    const responseHeaders: Record<string, any> = {};
+    const responseHeaders: Record<string, string> = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
     
     // Clone response to read body without consuming it
     const clonedResponse = response.clone();
-    let responseData: any = undefined;
+    let responseData: unknown = undefined;
     
     try {
       // Try to parse as JSON
@@ -78,7 +78,7 @@ export async function loggedFetch(
       } else {
         responseData = `[Binary data: ${contentType || 'unknown type'}]`;
       }
-    } catch (e) {
+    } catch {
       // If we can't read the body, just note it
       responseData = '[Unable to parse response body]';
     }

@@ -16,9 +16,9 @@ export async function DELETE(
 
     try {
       await unsubscribeWebhook(session.accessToken!, params.id);
-    } catch (error: any) {
+    } catch (error) {
       // 404 means the subscription no longer exists — treat as success
-      if (error.status !== 404) {
+      if ((error as { status?: number }).status !== 404) {
         throw error;
       }
     }
@@ -30,10 +30,11 @@ export async function DELETE(
     await currentSession.save();
 
     return new NextResponse(null, { status: 204 });
-  } catch (error: any) {
+  } catch (error) {
+    const e = error as { message?: string; code?: string; status?: number };
     logError(error, 'Unsubscribe error');
 
-    if (error.message === 'Unauthorized' || error.message === 'Token expired') {
+    if (e.message === 'Unauthorized' || e.message === 'Token expired') {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Please log in again' } },
         { status: 401 }
@@ -41,8 +42,8 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { error: { code: error.code || 'INTERNAL_ERROR', message: error.message } },
-      { status: error.status || 500 }
+      { error: { code: e.code || 'INTERNAL_ERROR', message: e.message } },
+      { status: e.status || 500 }
     );
   }
 }

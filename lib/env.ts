@@ -39,6 +39,7 @@ function validateEnv(): Env {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const messages = error.errors.map((err) => `  - ${err.path.join('.')}: ${err.message}`);
+      // eslint-disable-next-line no-console
       console.error('❌ Environment variable validation failed:\n' + messages.join('\n'));
       throw new Error('Invalid environment configuration. See errors above.');
     }

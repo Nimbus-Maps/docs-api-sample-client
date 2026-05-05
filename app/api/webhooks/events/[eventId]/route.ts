@@ -17,26 +17,27 @@ export async function GET(
     const data = await getWebhookEventDetails(session.accessToken!, params.eventId);
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error) {
+    const e = error as { message?: string; code?: string; status?: number };
     logError(error, 'Webhook event details error');
 
-    if (error.message === 'Unauthorized' || error.message === 'Token expired') {
+    if (e.message === 'Unauthorized' || e.message === 'Token expired') {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Please log in again' } },
         { status: 401 }
       );
     }
 
-    if (error.status === 404) {
+    if (e.status === 404) {
       return NextResponse.json(
-        { error: { code: error.code || 'NOT_FOUND', message: error.message } },
+        { error: { code: e.code || 'NOT_FOUND', message: e.message } },
         { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { error: { code: error.code || 'INTERNAL_ERROR', message: error.message } },
-      { status: error.status || 500 }
+      { error: { code: e.code || 'INTERNAL_ERROR', message: e.message } },
+      { status: e.status || 500 }
     );
   }
 }

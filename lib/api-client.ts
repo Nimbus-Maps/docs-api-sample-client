@@ -39,13 +39,13 @@ export function createDocumentApiClient(accessToken: string): AxiosInstance {
   client.interceptors.request.use(
     (config) => {
       // Store request timestamp for duration calculation
-      (config as any).requestStartTime = Date.now();
+      (config as unknown as Record<string, unknown>).requestStartTime = Date.now();
 
       // Log the request with full headers including Authorization
       logHttpRequest(
         config.method?.toUpperCase() || 'GET',
         config.baseURL ? `${config.baseURL}${config.url}` : config.url || '',
-        config.headers as Record<string, any>,
+        config.headers as Record<string, string>,
         config.data
       );
 
@@ -61,8 +61,8 @@ export function createDocumentApiClient(accessToken: string): AxiosInstance {
   client.interceptors.response.use(
     (response) => {
       // Calculate request duration
-      const startTime = (response.config as any).requestStartTime;
-      const duration = startTime ? Date.now() - startTime : undefined;
+      const startTime = (response.config as unknown as Record<string, unknown>).requestStartTime;
+      const duration = startTime ? Date.now() - (startTime as number) : undefined;
 
       // Log the response with full headers and data
       logHttpResponse(
@@ -70,7 +70,7 @@ export function createDocumentApiClient(accessToken: string): AxiosInstance {
         response.config.baseURL ? `${response.config.baseURL}${response.config.url}` : response.config.url || '',
         response.status,
         response.statusText,
-        response.headers as Record<string, any>,
+        response.headers as Record<string, string>,
         response.data,
         duration
       );
@@ -79,8 +79,8 @@ export function createDocumentApiClient(accessToken: string): AxiosInstance {
     },
     (error) => {
       // Calculate request duration
-      const startTime = (error.config as any)?.requestStartTime;
-      const duration = startTime ? Date.now() - startTime : undefined;
+      const startTime = (error.config as Record<string, unknown>)?.requestStartTime;
+      const duration = startTime ? Date.now() - (startTime as number) : undefined;
 
       // Log the error with full details
       logHttpError(
@@ -276,10 +276,10 @@ function handleApiError(error: unknown): Error {
     if (axiosError.response?.data?.error) {
       const apiError = axiosError.response.data.error;
       const message = `${apiError.code}: ${apiError.message}`;
-      const err = new Error(message);
-      (err as any).code = apiError.code;
-      (err as any).status = axiosError.response.status;
-      (err as any).details = apiError.details;
+      const err = new Error(message) as Error & { code: string; status: number; details: unknown };
+      err.code = apiError.code;
+      err.status = axiosError.response.status;
+      err.details = apiError.details;
       return err;
     }
 

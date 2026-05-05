@@ -122,8 +122,8 @@ export const httpLogger = pino({
 export function logHttpRequest(
   method: string,
   url: string,
-  headers: Record<string, any>,
-  body?: any
+  headers: Record<string, string>,
+  body?: unknown
 ) {
   httpLogger.info({
     type: 'http_request',
@@ -149,8 +149,8 @@ export function logHttpResponse(
   url: string,
   status: number,
   statusText: string,
-  headers: Record<string, any>,
-  data?: any,
+  headers: Record<string, string>,
+  data?: unknown,
   duration?: number
 ) {
   httpLogger.info({
@@ -175,21 +175,22 @@ export function logHttpResponse(
 export function logHttpError(
   method: string,
   url: string,
-  error: any,
+  error: unknown,
   duration?: number
 ) {
+  const err = error as { message?: string; code?: string; response?: { status?: number; statusText?: string; headers?: Record<string, string>; data?: unknown } };
   httpLogger.error({
     type: 'http_error',
     method,
     url,
     error: {
-      message: error.message,
-      code: error.code,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      headers: error.response?.headers,
-      data: error.response?.data,
+      message: err.message,
+      code: err.code,
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      headers: err.response?.headers,
+      data: err.response?.data,
     },
     duration,
-  }, `HTTP Error: ${method} ${url} - ${error.message}${duration ? ` (${duration}ms)` : ''}`);
+  }, `HTTP Error: ${method} ${url} - ${err.message ?? 'unknown'}${duration ? ` (${duration}ms)` : ''}`);
 }

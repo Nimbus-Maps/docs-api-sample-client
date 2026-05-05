@@ -15,12 +15,12 @@ const mockLoadSession = loadSession as jest.MockedFunction<typeof loadSession>;
 describe('Session Utilities', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCookies.mockResolvedValue({} as any);
+    mockCookies.mockResolvedValue({} as unknown as Awaited<ReturnType<typeof cookies>>);
     // Cookie session only holds a sessionId; save() is called internally
     mockGetIronSession.mockResolvedValue({
       sessionId: 'test-session-id',
       save: jest.fn().mockResolvedValue(undefined),
-    } as any);
+    } as unknown as Awaited<ReturnType<typeof getIronSession>>);
     // Default: session data not found in store
     mockLoadSession.mockResolvedValue(null);
   });
@@ -47,7 +47,7 @@ describe('Session Utilities', () => {
 
       const callArgs = mockGetIronSession.mock.calls[0];
       expect(callArgs).toBeDefined();
-      const sessionOptions = callArgs![1] as any;
+      const sessionOptions = callArgs![1] as unknown as Record<string, unknown>;
 
       expect(sessionOptions).toHaveProperty('cookieName', 'nimbus_docs_session');
       expect(sessionOptions).toHaveProperty('cookieOptions');

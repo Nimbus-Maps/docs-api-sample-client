@@ -42,8 +42,9 @@ export async function POST(request: NextRequest) {
         // Persist as current subscription secret for fallback verification
         await storeCurrentSubscriptionSecret(subscription.subscription_id, subscription.secret);
         logInfo('Auto-subscribed to webhooks during purchase', { subscriptionId: subscription.subscription_id });
-      } catch (subError: any) {
-        if (subError.status === 409) {
+      } catch (subError) {
+        const s = subError as { status?: number; message?: string };
+        if (s.status === 409) {
           // Already subscribed on the API side but secret is missing from session.
           // The user can re-subscribe manually from the Webhooks page to restore the mapping.
           logWarn('Auto-subscribe skipped: subscription already exists but secret is not in session', {
@@ -51,17 +52,18 @@ export async function POST(request: NextRequest) {
           });
         } else {
           logWarn('Auto-subscribe failed; webhook signature verification may not work for this order', {
-            error: subError.message,
+            error: s.message,
           });
         }
       }
     }
 
     return NextResponse.json(data, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
+    const e = error as { message?: string; code?: string; status?: number };
     logError(error, 'Purchase error');
 
-    if (error.message === 'Unauthorized' || error.message === 'Token expired') {
+    if (e.message === 'Unauthorized' || e.message === 'Token expired') {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Please log in again' } },
         { status: 401 }
@@ -69,8 +71,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: { code: error.code || 'INTERNAL_ERROR', message: error.message } },
-      { status: error.status || 500 }
+      { error: { code: e.code || 'INTERNAL_ERROR', message: e.message } },
+      { status: e.status || 500 }
     );
   }
 }

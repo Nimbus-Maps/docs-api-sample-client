@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             // help and just amplifies load on a failing upstream service.
             // Only retry on genuine network-level failures (no response).
             retry: (failureCount, error) => {
-              if ((error as any)?.status) return false;
+              if ((error as { status?: number })?.status) return false;
               return failureCount < 2;
             },
           },

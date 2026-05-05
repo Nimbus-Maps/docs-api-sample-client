@@ -30,10 +30,11 @@ export async function POST(_request: NextRequest) {
     await storeCurrentSubscriptionSecret(data.subscription_id, data.secret);
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error) {
+    const e = error as { message?: string; code?: string; status?: number };
     logError(error, 'Subscribe error');
 
-    if (error.message === 'Unauthorized' || error.message === 'Token expired') {
+    if (e.message === 'Unauthorized' || e.message === 'Token expired') {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Please log in again' } },
         { status: 401 }
@@ -41,16 +42,16 @@ export async function POST(_request: NextRequest) {
     }
 
     // Handle subscription conflict (already exists)
-    if (error.status === 409) {
+    if (e.status === 409) {
       return NextResponse.json(
-        { error: { code: error.code, message: error.message } },
+        { error: { code: e.code, message: e.message } },
         { status: 409 }
       );
     }
 
     return NextResponse.json(
-      { error: { code: error.code || 'INTERNAL_ERROR', message: error.message } },
-      { status: error.status || 500 }
+      { error: { code: e.code || 'INTERNAL_ERROR', message: e.message } },
+      { status: e.status || 500 }
     );
   }
 }

@@ -66,7 +66,7 @@ function EventsTab() {
     refetchInterval: 5000,
   });
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'warning' | 'destructive' | 'secondary' => {
     switch (status) {
       case 'COMPLETED': return 'success';
       case 'PROCESSING': return 'warning';
@@ -108,7 +108,7 @@ function EventsTab() {
                       <XCircle className="h-3 w-3" />Unverified
                     </Badge>
                   )}
-                  <Badge variant={getStatusColor(event.payload.Data?.StatusDescription) as any}>{event.payload.Data?.StatusDescription ?? 'Unknown'}</Badge>
+                  <Badge variant={getStatusColor(event.payload.Data?.StatusDescription ?? '')}>{event.payload.Data?.StatusDescription ?? 'Unknown'}</Badge>
                 </div>
               </div>
             </CardHeader>
@@ -136,10 +136,10 @@ function EventsTab() {
                     <p className="font-semibold">{event.payload.Data.Message}</p>
                   </div>
                 )}
-                {event.payload.timestamp && (
+                {event.payload.Timestamp && (
                   <div>
                     <p className="text-sm text-muted-foreground">Timestamp</p>
-                    <p className="font-semibold">{formatDate(event.payload.timestamp)}</p>
+                    <p className="font-semibold">{formatDate(event.payload.Timestamp)}</p>
                   </div>
                 )}
               </div>
