@@ -8,6 +8,28 @@ import { logHttpRequest, logHttpResponse, logHttpError } from './logger';
  * @param init - Request options
  * @returns Promise resolving to Response
  */
+// OAuth / form params that must never appear in logs
+const SENSITIVE_PARAMS = new Set([
+  'code', 'code_verifier', 'client_secret', 'refresh_token', 'access_token', 'password',
+]);
+
+/**
+ * Redact sensitive OAuth parameters from a URL-encoded body string.
+ */
+function sanitizeBodyForLogging(body: string): string {
+  try {
+    const params = new URLSearchParams(body);
+    const hasSensitive = [...params.keys()].some((k) => SENSITIVE_PARAMS.has(k));
+    if (!hasSensitive) return body;
+    for (const key of SENSITIVE_PARAMS) {
+      if (params.has(key)) params.set(key, '[REDACTED]');
+    }
+    return params.toString();
+  } catch {
+    return body;
+  }
+}
+
 export async function loggedFetch(
   input: RequestInfo | URL,
   init?: RequestInit
@@ -38,7 +60,7 @@ export async function loggedFetch(
   let bodyForLogging: unknown = undefined;
   if (init?.body) {
     if (typeof init.body === 'string') {
-      bodyForLogging = init.body;
+      bodyForLogging = sanitizeBodyForLogging(init.body);
     } else if (init.body instanceof URLSearchParams) {
       bodyForLogging = Object.fromEntries(init.body.entries());
     } else if (init.body instanceof FormData) {

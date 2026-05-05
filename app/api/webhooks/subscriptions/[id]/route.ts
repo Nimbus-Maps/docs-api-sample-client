@@ -9,13 +9,14 @@ import { logError } from '@/lib/logger';
  */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireAuth();
+    const { id } = await params;
 
     try {
-      await unsubscribeWebhook(session.accessToken!, params.id);
+      await unsubscribeWebhook(session.accessToken!, id);
     } catch (error) {
       // 404 means the subscription no longer exists — treat as success
       if ((error as { status?: number }).status !== 404) {

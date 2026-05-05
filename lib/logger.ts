@@ -98,14 +98,22 @@ export function logDebug(message: string, context?: Record<string, unknown>) {
 }
 
 /**
- * HTTP logger that does NOT redact authorization headers or tokens
- * Use this ONLY for debugging HTTP requests/responses
- * WARNING: This logger will expose sensitive credentials in logs
+ * HTTP logger — redacts credentials from headers and token response bodies
  */
 export const httpLogger = pino({
   level: process.env.HTTP_LOG_LEVEL || process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
   enabled: !isTest && (process.env.ENABLE_HTTP_LOGGING === 'true' || isDevelopment),
-  // No redaction - logs full headers including Authorization
+  redact: {
+    paths: [
+      'headers.Authorization',
+      'headers.authorization',
+      'data.access_token',
+      'data.refresh_token',
+      'data.id_token',
+      'data.secret',
+    ],
+    censor: '[REDACTED]',
+  },
   base: {
     env: process.env.NODE_ENV,
     logger: 'http',
@@ -113,7 +121,7 @@ export const httpLogger = pino({
 });
 
 /**
- * Log an HTTP request with full headers (including Authorization)
+ * Log an HTTP request — credentials in headers and OAuth body params are redacted
  * @param method - HTTP method
  * @param url - Request URL
  * @param headers - Request headers

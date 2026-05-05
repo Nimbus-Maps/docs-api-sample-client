@@ -9,12 +9,13 @@ import { logError } from '@/lib/logger';
  */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const session = await requireAuth();
+    const { eventId } = await params;
 
-    const data = await getWebhookEventDetails(session.accessToken!, params.eventId);
+    const data = await getWebhookEventDetails(session.accessToken!, eventId);
 
     return NextResponse.json(data);
   } catch (error) {
