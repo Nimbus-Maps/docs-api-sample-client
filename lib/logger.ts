@@ -133,13 +133,16 @@ export function logHttpRequest(
   headers: Record<string, string>,
   body?: unknown
 ) {
-  httpLogger.info({
-    type: 'http_request',
-    method,
-    url,
-    headers,
-    body: body || undefined,
-  }, `HTTP Request: ${method} ${url}`);
+  httpLogger.info(
+    {
+      type: 'http_request',
+      method,
+      url,
+      headers,
+      body: body || undefined,
+    },
+    `HTTP Request: ${method} ${url}`
+  );
 }
 
 /**
@@ -161,16 +164,19 @@ export function logHttpResponse(
   data?: unknown,
   duration?: number
 ) {
-  httpLogger.info({
-    type: 'http_response',
-    method,
-    url,
-    status,
-    statusText,
-    headers,
-    data: data || undefined,
-    duration,
-  }, `HTTP Response: ${method} ${url} - ${status} ${statusText}${duration ? ` (${duration}ms)` : ''}`);
+  httpLogger.info(
+    {
+      type: 'http_response',
+      method,
+      url,
+      status,
+      statusText,
+      headers,
+      data: data || undefined,
+      duration,
+    },
+    `HTTP Response: ${method} ${url} - ${status} ${statusText}${duration ? ` (${duration}ms)` : ''}`
+  );
 }
 
 /**
@@ -180,25 +186,32 @@ export function logHttpResponse(
  * @param error - Error object
  * @param duration - Request duration in ms (optional)
  */
-export function logHttpError(
-  method: string,
-  url: string,
-  error: unknown,
-  duration?: number
-) {
-  const err = error as { message?: string; code?: string; response?: { status?: number; statusText?: string; headers?: Record<string, string>; data?: unknown } };
-  httpLogger.error({
-    type: 'http_error',
-    method,
-    url,
-    error: {
-      message: err.message,
-      code: err.code,
-      status: err.response?.status,
-      statusText: err.response?.statusText,
-      headers: err.response?.headers,
-      data: err.response?.data,
+export function logHttpError(method: string, url: string, error: unknown, duration?: number) {
+  const err = error as {
+    message?: string;
+    code?: string;
+    response?: {
+      status?: number;
+      statusText?: string;
+      headers?: Record<string, string>;
+      data?: unknown;
+    };
+  };
+  httpLogger.error(
+    {
+      type: 'http_error',
+      method,
+      url,
+      error: {
+        message: err.message,
+        code: err.code,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        headers: err.response?.headers,
+        data: err.response?.data,
+      },
+      duration,
     },
-    duration,
-  }, `HTTP Error: ${method} ${url} - ${err.message ?? 'unknown'}${duration ? ` (${duration}ms)` : ''}`);
+    `HTTP Error: ${method} ${url} - ${err.message ?? 'unknown'}${duration ? ` (${duration}ms)` : ''}`
+  );
 }

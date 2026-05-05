@@ -1,7 +1,9 @@
 ## Description
+
 <!-- Provide a brief description of the changes in this PR -->
 
 ## Type of Change
+
 <!-- Mark the relevant option with an "x" -->
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -13,6 +15,7 @@
 - [ ] Test addition or update
 
 ## Testing
+
 <!-- Describe the tests you ran to verify your changes -->
 
 - [ ] All existing tests pass
@@ -20,6 +23,7 @@
 - [ ] Manual testing performed
 
 ## Checklist
+
 <!-- Mark completed items with an "x" -->
 
 - [ ] My code follows the style guidelines of this project
@@ -32,9 +36,11 @@
 - [ ] Any dependent changes have been merged and published
 
 ## Related Issues
+
 <!-- Link any related issues here -->
 
 Closes #
 
 ## Screenshots (if applicable)
+
 <!-- Add screenshots to help explain your changes -->

@@ -66,16 +66,22 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
                 <h1 className="text-xl font-bold text-primary">Nimbus Docs API</h1>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {[{ href: '/dashboard', label: 'Dashboard' }, { href: '/orders', label: 'Orders' }, { href: '/webhooks', label: 'Webhooks' }, { href: '/verify', label: 'Verify Ownership' }].map(({ href, label }) => {
+                {[
+                  { href: '/dashboard', label: 'Dashboard' },
+                  { href: '/orders', label: 'Orders' },
+                  { href: '/webhooks', label: 'Webhooks' },
+                  { href: '/verify', label: 'Verify Ownership' },
+                ].map(({ href, label }) => {
                   const active = pathname.startsWith(href);
                   return (
                     <Link
                       key={href}
                       href={href}
-                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${active
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                        active
                           ? 'border-primary text-gray-900'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
+                      }`}
                     >
                       {label}
                     </Link>
@@ -105,17 +111,23 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
         {mobileMenuOpen && (
           <div className="sm:hidden">
             <div className="pt-2 pb-3 space-y-1">
-              {[{ href: '/dashboard', label: 'Dashboard' }, { href: '/orders', label: 'Orders' }, { href: '/webhooks', label: 'Webhooks' }, { href: '/verify', label: 'Verify Ownership' }].map(({ href, label }) => {
+              {[
+                { href: '/dashboard', label: 'Dashboard' },
+                { href: '/orders', label: 'Orders' },
+                { href: '/webhooks', label: 'Webhooks' },
+                { href: '/verify', label: 'Verify Ownership' },
+              ].map(({ href, label }) => {
                 const active = pathname.startsWith(href);
                 return (
                   <Link
                     key={href}
                     href={href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${active
+                    className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                      active
                         ? 'border-primary text-primary bg-indigo-50'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300'
-                      }`}
+                    }`}
                   >
                     {label}
                   </Link>

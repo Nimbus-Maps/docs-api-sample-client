@@ -8,11 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import {
-  AvailabilityCheckResponse,
-  PurchaseRequest,
-  PurchaseResponse,
-} from '@/lib/types';
+import { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse } from '@/lib/types';
 import { formatTokens, formatDate } from '@/lib/utils';
 import { addOrderToHistory } from '@/lib/order-history';
 import { Search, ShoppingCart, Check, AlertCircle, Info } from 'lucide-react';
@@ -87,10 +83,10 @@ export default function DashboardPage() {
       });
       if (!res.ok) {
         const error = await res.json();
-        throw Object.assign(
-          new Error(error.error?.message || 'Failed to purchase documents'),
-          { status: res.status, details: error.error?.details }
-        );
+        throw Object.assign(new Error(error.error?.message || 'Failed to purchase documents'), {
+          status: res.status,
+          details: error.error?.details,
+        });
       }
       return res.json();
     },
@@ -107,7 +103,12 @@ export default function DashboardPage() {
       setQuickCustomerRef('');
       setQuickTitleNumber('');
     },
-    onError: (error: Error & { status?: number; details?: { documents_in_progress?: Array<{ document_id: string; order_id: string }> } }) => {
+    onError: (
+      error: Error & {
+        status?: number;
+        details?: { documents_in_progress?: Array<{ document_id: string; order_id: string }> };
+      }
+    ) => {
       if (error.status === 409 && error.details?.documents_in_progress?.length) {
         const inProgress = error.details.documents_in_progress
           .map((d) => `${d.document_id} (order ${d.order_id.slice(0, 8)}…)`)
@@ -236,7 +237,8 @@ export default function DashboardPage() {
             Quick Purchase
           </CardTitle>
           <CardDescription>
-            Purchase register and/or title plan documents directly, without checking availability first
+            Purchase register and/or title plan documents directly, without checking availability
+            first
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -272,9 +274,7 @@ export default function DashboardPage() {
                           : 'border-gray-300'
                       }`}
                     >
-                      {quickSelectedDocs.includes(id) && (
-                        <Check className="h-3 w-3 text-white" />
-                      )}
+                      {quickSelectedDocs.includes(id) && <Check className="h-3 w-3 text-white" />}
                     </div>
                     <span className="font-medium">{label}</span>
                   </div>
@@ -357,10 +357,11 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-3">
                     <div className="mt-1">
                       <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedDocs.includes('register')
-                          ? 'bg-primary border-primary'
-                          : 'border-gray-300'
-                          }`}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                          selectedDocs.includes('register')
+                            ? 'bg-primary border-primary'
+                            : 'border-gray-300'
+                        }`}
                       >
                         {selectedDocs.includes('register') && (
                           <Check className="h-3 w-3 text-white" />
@@ -402,10 +403,11 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-3">
                     <div className="mt-1">
                       <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedDocs.includes('title_plan')
-                          ? 'bg-primary border-primary'
-                          : 'border-gray-300'
-                          }`}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                          selectedDocs.includes('title_plan')
+                            ? 'bg-primary border-primary'
+                            : 'border-gray-300'
+                        }`}
                       >
                         {selectedDocs.includes('title_plan') && (
                           <Check className="h-3 w-3 text-white" />

@@ -229,6 +229,7 @@ To avoid browser cookie size limits (4KB), this sample uses a **hybrid session a
 - **Cleanup**: Old sessions are periodically removed (1% chance per request + manual script)
 
 **Manual session cleanup:**
+
 ```bash
 npx tsx scripts/cleanup-sessions.ts
 ```
@@ -347,6 +348,7 @@ You only need to subscribe once. All events — regardless of which order they b
 After subscribing, make a document purchase on the Dashboard. The Document API processes the order and—typically within seconds—sends a signed `POST` to your webhook URL for each document in the order.
 
 Each event contains:
+
 - A JSON payload describing the document status change
 - An `X-Webhook-Signature` header: HMAC-SHA256 of the raw body, base64-encoded, using your subscription secret
 
@@ -373,6 +375,7 @@ The app verifies the signature using the `_current_subscription` secret from `we
 ```
 
 **Key fields:**
+
 - `data.reference` — `UserDocument` GUID; pass this to `GET /download/{reference}` to download the file
 - `data.titleNumber` — Land Registry title number
 - `data.statusDescription` — human-readable status (e.g. `"Completed"`)
@@ -419,9 +422,9 @@ A `200 OK` response confirms the signature was verified and the event was stored
 
 ### Where to Find Webhook Data
 
-| File | Contents |
-|------|----------|
-| `webhook-events.json` | Last 50 received events (created automatically on first delivery) |
+| File                   | Contents                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `webhook-events.json`  | Last 50 received events (created automatically on first delivery)                    |
 | `webhook-secrets.json` | Subscription secret stored under `_current_subscription`; written when you subscribe |
 
 The **Webhooks** page (`/webhooks`) auto-refreshes every 5 seconds and shows each event's payload, received timestamp, and whether its signature was verified.
@@ -562,6 +565,7 @@ HTTP_LOG_LEVEL=debug
 When enabled, all HTTP requests and responses will be logged with:
 
 ✅ **Request Details:**
+
 - HTTP method (GET, POST, etc.)
 - Full URL with query parameters
 - All headers (including `Authorization: Bearer <token>`)
@@ -569,12 +573,14 @@ When enabled, all HTTP requests and responses will be logged with:
 - Request timestamp
 
 ✅ **Response Details:**
+
 - HTTP status code and status text
 - All response headers
 - Response body (parsed JSON or text)
 - Request duration in milliseconds
 
 ✅ **Error Details:**
+
 - Error messages and stack traces
 - Failed request details
 - HTTP error responses (4xx, 5xx)

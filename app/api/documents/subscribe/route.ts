@@ -43,10 +43,7 @@ export async function POST(_request: NextRequest) {
 
     // Handle subscription conflict (already exists)
     if (e.status === 409) {
-      return NextResponse.json(
-        { error: { code: e.code, message: e.message } },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: { code: e.code, message: e.message } }, { status: 409 });
     }
 
     return NextResponse.json(

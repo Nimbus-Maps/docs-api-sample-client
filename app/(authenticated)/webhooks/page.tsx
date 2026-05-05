@@ -7,9 +7,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { WebhookEvent, WebhookAuditItem, WebhookAuditResponse, WebhookStatisticsResponse, WebhookSubscriptionResponse } from '@/lib/types';
+import {
+  WebhookEvent,
+  WebhookAuditItem,
+  WebhookAuditResponse,
+  WebhookStatisticsResponse,
+  WebhookSubscriptionResponse,
+} from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { RefreshCw, Webhook, CheckCircle, XCircle, BarChart3, List, Settings, Download } from 'lucide-react';
+import {
+  RefreshCw,
+  Webhook,
+  CheckCircle,
+  XCircle,
+  BarChart3,
+  List,
+  Settings,
+  Download,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -18,14 +33,23 @@ import { toast } from 'sonner';
 
 type Tab = 'events' | 'statistics' | 'audit' | 'subscriptions';
 
-function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${active
-        ? 'bg-primary text-primary-foreground'
-        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-        }`}
+      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+        active
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+      }`}
     >
       {children}
     </button>
@@ -68,11 +92,15 @@ function EventsTab() {
 
   const getStatusColor = (status: string): 'success' | 'warning' | 'destructive' | 'secondary' => {
     switch (status) {
-      case 'COMPLETED': return 'success';
-      case 'PROCESSING': return 'warning';
+      case 'COMPLETED':
+        return 'success';
+      case 'PROCESSING':
+        return 'warning';
       case 'FAILED':
-      case 'WEBHOOK_FAILED': return 'destructive';
-      default: return 'secondary';
+      case 'WEBHOOK_FAILED':
+        return 'destructive';
+      default:
+        return 'secondary';
     }
   };
 
@@ -85,7 +113,13 @@ function EventsTab() {
         </Button>
       </div>
       {isLoading ? (
-        <Card><CardContent className="pt-6"><div className="flex items-center justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div></CardContent></Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          </CardContent>
+        </Card>
       ) : data?.events && data.events.length > 0 ? (
         data.events.map((event) => (
           <Card key={event.id}>
@@ -96,19 +130,25 @@ function EventsTab() {
                     <Webhook className="h-5 w-5" />
                     {event.payload.EventType ?? 'Webhook Event'}
                   </CardTitle>
-                  <CardDescription className="mt-2">Received: {formatDate(event.receivedAt)}</CardDescription>
+                  <CardDescription className="mt-2">
+                    Received: {formatDate(event.receivedAt)}
+                  </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   {event.verified ? (
                     <Badge variant="success" className="flex items-center gap-1">
-                      <CheckCircle className="h-3 w-3" />Verified
+                      <CheckCircle className="h-3 w-3" />
+                      Verified
                     </Badge>
                   ) : (
                     <Badge variant="destructive" className="flex items-center gap-1">
-                      <XCircle className="h-3 w-3" />Unverified
+                      <XCircle className="h-3 w-3" />
+                      Unverified
                     </Badge>
                   )}
-                  <Badge variant={getStatusColor(event.payload.Data?.StatusDescription ?? '')}>{event.payload.Data?.StatusDescription ?? 'Unknown'}</Badge>
+                  <Badge variant={getStatusColor(event.payload.Data?.StatusDescription ?? '')}>
+                    {event.payload.Data?.StatusDescription ?? 'Unknown'}
+                  </Badge>
                 </div>
               </div>
             </CardHeader>
@@ -120,11 +160,15 @@ function EventsTab() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Document Reference</p>
-                  <p className="font-semibold font-mono text-xs break-all">{event.payload.Data?.Reference ?? 'N/A'}</p>
+                  <p className="font-semibold font-mono text-xs break-all">
+                    {event.payload.Data?.Reference ?? 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Document</p>
-                  <p className="font-semibold">{event.payload.Data?.DocumentDescription ?? 'N/A'}</p>
+                  <p className="font-semibold">
+                    {event.payload.Data?.DocumentDescription ?? 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
@@ -143,17 +187,20 @@ function EventsTab() {
                   </div>
                 )}
               </div>
-              {event.payload.Data?.StatusDescription === 'Completed' && event.payload.Data?.Reference && (
-                <div>
-                  <Button size="sm" onClick={() => handleDownload(event.payload.Data!.Reference)}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Document
-                  </Button>
-                </div>
-              )}
+              {event.payload.Data?.StatusDescription === 'Completed' &&
+                event.payload.Data?.Reference && (
+                  <div>
+                    <Button size="sm" onClick={() => handleDownload(event.payload.Data!.Reference)}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Document
+                    </Button>
+                  </div>
+                )}
               <div className="pt-2 border-t">
                 <details className="text-xs">
-                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Signature Details</summary>
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                    Signature Details
+                  </summary>
                   <p className="mt-2 font-mono break-all bg-muted p-2 rounded">{event.signature}</p>
                 </details>
               </div>
@@ -166,7 +213,9 @@ function EventsTab() {
             <div className="text-center py-8">
               <Webhook className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold">No webhook events yet</h3>
-              <p className="text-sm text-muted-foreground mt-1">Webhook events will appear here when documents are delivered</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Webhook events will appear here when documents are delivered
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -213,44 +262,90 @@ function StatisticsTab() {
           <div className="flex items-end gap-4">
             <div className="space-y-1">
               <Label htmlFor="stats-start">From</Label>
-              <Input id="stats-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Input
+                id="stats-start"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="stats-end">To</Label>
-              <Input id="stats-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Input
+                id="stats-end"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
             </div>
             <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" />Apply
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Apply
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {isLoading ? (
-        <Card><CardContent className="pt-6"><div className="flex items-center justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div></CardContent></Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          </CardContent>
+        </Card>
       ) : error ? (
-        <Card><CardContent className="pt-6"><p className="text-destructive text-sm">Failed to load statistics</p></CardContent></Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-destructive text-sm">Failed to load statistics</p>
+          </CardContent>
+        </Card>
       ) : data ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <Card>
-            <CardHeader className="pb-2"><CardDescription>Total Attempts</CardDescription></CardHeader>
-            <CardContent><p className="text-3xl font-bold">{data.total_attempts}</p></CardContent>
+            <CardHeader className="pb-2">
+              <CardDescription>Total Attempts</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{data.total_attempts}</p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardDescription>Successful</CardDescription></CardHeader>
-            <CardContent><p className="text-3xl font-bold text-green-600">{data.successful_deliveries}</p></CardContent>
+            <CardHeader className="pb-2">
+              <CardDescription>Successful</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-green-600">{data.successful_deliveries}</p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardDescription>Failed</CardDescription></CardHeader>
-            <CardContent><p className="text-3xl font-bold text-destructive">{data.failed_deliveries}</p></CardContent>
+            <CardHeader className="pb-2">
+              <CardDescription>Failed</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-destructive">{data.failed_deliveries}</p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardDescription>Success Rate</CardDescription></CardHeader>
-            <CardContent><p className="text-3xl font-bold">{data.success_rate != null ? data.success_rate.toFixed(1) : '—'}%</p></CardContent>
+            <CardHeader className="pb-2">
+              <CardDescription>Success Rate</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">
+                {data.success_rate != null ? data.success_rate.toFixed(1) : '—'}%
+              </p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardDescription>Avg Duration</CardDescription></CardHeader>
-            <CardContent><p className="text-3xl font-bold">{data.average_duration_ms != null ? data.average_duration_ms.toFixed(0) : '—'}<span className="text-sm font-normal text-muted-foreground ml-1">ms</span></p></CardContent>
+            <CardHeader className="pb-2">
+              <CardDescription>Avg Duration</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">
+                {data.average_duration_ms != null ? data.average_duration_ms.toFixed(0) : '—'}
+                <span className="text-sm font-normal text-muted-foreground ml-1">ms</span>
+              </p>
+            </CardContent>
           </Card>
         </div>
       ) : null}
@@ -262,9 +357,18 @@ function StatisticsTab() {
 // Audit tab
 // ============================================================================
 
-function AuditItemRow({ item, onViewDetails }: { item: WebhookAuditItem; onViewDetails: (item: WebhookAuditItem) => void }) {
+function AuditItemRow({
+  item,
+  onViewDetails,
+}: {
+  item: WebhookAuditItem;
+  onViewDetails: (item: WebhookAuditItem) => void;
+}) {
   return (
-    <div className="flex items-center justify-between p-3 border rounded text-sm hover:bg-muted/50 cursor-pointer" onClick={() => onViewDetails(item)}>
+    <div
+      className="flex items-center justify-between p-3 border rounded text-sm hover:bg-muted/50 cursor-pointer"
+      onClick={() => onViewDetails(item)}
+    >
       <div className="flex items-center gap-3 min-w-0">
         {item.is_success ? (
           <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
@@ -278,11 +382,15 @@ function AuditItemRow({ item, onViewDetails }: { item: WebhookAuditItem; onViewD
       </div>
       <div className="flex items-center gap-3 shrink-0 text-right">
         {item.http_status_code && (
-          <Badge variant={item.is_success ? 'outline' : 'destructive'}>{item.http_status_code}</Badge>
+          <Badge variant={item.is_success ? 'outline' : 'destructive'}>
+            {item.http_status_code}
+          </Badge>
         )}
         <div>
           <p className="text-xs text-muted-foreground">{formatDate(item.attempted_at)}</p>
-          {item.duration_ms != null && <p className="text-xs text-muted-foreground">{item.duration_ms}ms</p>}
+          {item.duration_ms != null && (
+            <p className="text-xs text-muted-foreground">{item.duration_ms}ms</p>
+          )}
         </div>
       </div>
     </div>
@@ -341,23 +449,51 @@ function AuditTab() {
     <div className="space-y-4">
       {/* Filters */}
       <Card>
-        <CardHeader><CardTitle>Filters</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1">
               <Label htmlFor="audit-start">From</Label>
-              <Input id="audit-start" type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setPageNumber(1); }} />
+              <Input
+                id="audit-start"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPageNumber(1);
+                }}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="audit-end">To</Label>
-              <Input id="audit-end" type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setPageNumber(1); }} />
+              <Input
+                id="audit-end"
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPageNumber(1);
+                }}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="audit-sub">Subscription ID</Label>
-              <Input id="audit-sub" placeholder="UUID (optional)" value={subscriptionId} onChange={(e) => { setSubscriptionId(e.target.value); setPageNumber(1); }} className="w-72" />
+              <Input
+                id="audit-sub"
+                placeholder="UUID (optional)"
+                value={subscriptionId}
+                onChange={(e) => {
+                  setSubscriptionId(e.target.value);
+                  setPageNumber(1);
+                }}
+                className="w-72"
+              />
             </div>
             <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" />Refresh
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
             </Button>
           </div>
         </CardContent>
@@ -365,7 +501,13 @@ function AuditTab() {
 
       {/* Results */}
       {isLoading ? (
-        <Card><CardContent className="pt-6"><div className="flex items-center justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div></CardContent></Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          </CardContent>
+        </Card>
       ) : data ? (
         <Card>
           <CardHeader>
@@ -385,9 +527,25 @@ function AuditTab() {
           </CardContent>
           {data.total_pages > 1 && (
             <div className="px-6 pb-4 flex items-center justify-between">
-              <Button variant="outline" size="sm" disabled={pageNumber <= 1} onClick={() => setPageNumber((p) => p - 1)}>Previous</Button>
-              <p className="text-sm text-muted-foreground">Page {data.page_number} of {data.total_pages}</p>
-              <Button variant="outline" size="sm" disabled={pageNumber >= data.total_pages} onClick={() => setPageNumber((p) => p + 1)}>Next</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pageNumber <= 1}
+                onClick={() => setPageNumber((p) => p - 1)}
+              >
+                Previous
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Page {data.page_number} of {data.total_pages}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pageNumber >= data.total_pages}
+                onClick={() => setPageNumber((p) => p + 1)}
+              >
+                Next
+              </Button>
             </div>
           )}
         </Card>
@@ -399,29 +557,54 @@ function AuditTab() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Event Details</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => { setSelectedItem(null); setEventDetails(null); }}>✕ Close</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedItem(null);
+                  setEventDetails(null);
+                }}
+              >
+                ✕ Close
+              </Button>
             </div>
             <CardDescription className="font-mono">{selectedItem.event_id}</CardDescription>
           </CardHeader>
           <CardContent>
             {detailsLoading ? (
-              <div className="flex items-center justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" /></div>
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+              </div>
             ) : eventDetails ? (
               <div className="space-y-2">
                 {eventDetails.map((attempt) => (
                   <div key={attempt.id} className="p-3 border rounded text-sm space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {attempt.is_success ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                        {attempt.is_success ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        )}
                         <span>Attempt {attempt.attempt_number}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {attempt.http_status_code && <Badge variant={attempt.is_success ? 'outline' : 'destructive'}>{attempt.http_status_code}</Badge>}
-                        {attempt.duration_ms != null && <span className="text-muted-foreground">{attempt.duration_ms}ms</span>}
+                        {attempt.http_status_code && (
+                          <Badge variant={attempt.is_success ? 'outline' : 'destructive'}>
+                            {attempt.http_status_code}
+                          </Badge>
+                        )}
+                        {attempt.duration_ms != null && (
+                          <span className="text-muted-foreground">{attempt.duration_ms}ms</span>
+                        )}
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">{formatDate(attempt.attempted_at)}</p>
-                    {attempt.error_message && <p className="text-xs text-destructive">{attempt.error_message}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(attempt.attempted_at)}
+                    </p>
+                    {attempt.error_message && (
+                      <p className="text-xs text-destructive">{attempt.error_message}</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -508,7 +691,9 @@ function SubscriptionsTab() {
       <Card>
         <CardHeader>
           <CardTitle>Active Subscription</CardTitle>
-          <CardDescription>Your current webhook subscription registered with the Document API</CardDescription>
+          <CardDescription>
+            Your current webhook subscription registered with the Document API
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {successMessage && (
@@ -531,7 +716,10 @@ function SubscriptionsTab() {
                 </Button>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Are you sure? This cannot be undone. New purchases will not trigger webhook notifications until you re-subscribe.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Are you sure? This cannot be undone. New purchases will not trigger webhook
+                    notifications until you re-subscribe.
+                  </p>
                   <div className="flex gap-2">
                     <Button
                       variant="destructive"
@@ -540,7 +728,9 @@ function SubscriptionsTab() {
                     >
                       {unsubscribeMutation.isPending ? 'Cancelling…' : 'Yes, cancel subscription'}
                     </Button>
-                    <Button variant="outline" onClick={() => setConfirmDelete(false)}>Keep subscription</Button>
+                    <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+                      Keep subscription
+                    </Button>
                   </div>
                 </div>
               )}
@@ -550,10 +740,15 @@ function SubscriptionsTab() {
               <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold">No active subscription</h3>
               <p className="text-sm text-muted-foreground mt-1 mb-4">
-                A subscription is created automatically when you make a purchase. You can also create one manually here.
+                A subscription is created automatically when you make a purchase. You can also
+                create one manually here.
               </p>
               <Button
-                onClick={() => { setSuccessMessage(''); setErrorMessage(''); subscribeMutation.mutate(); }}
+                onClick={() => {
+                  setSuccessMessage('');
+                  setErrorMessage('');
+                  subscribeMutation.mutate();
+                }}
                 disabled={subscribeMutation.isPending}
               >
                 {subscribeMutation.isPending ? 'Subscribing…' : 'Subscribe to Webhooks'}
@@ -577,22 +772,39 @@ export default function WebhooksPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Webhooks</h1>
-        <p className="text-muted-foreground mt-1">Monitor and manage webhook notifications from the Document API</p>
+        <p className="text-muted-foreground mt-1">
+          Monitor and manage webhook notifications from the Document API
+        </p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 border-b pb-0">
         <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')}>
-          <span className="flex items-center gap-1"><Webhook className="h-4 w-4" />Events</span>
+          <span className="flex items-center gap-1">
+            <Webhook className="h-4 w-4" />
+            Events
+          </span>
         </TabButton>
         <TabButton active={activeTab === 'statistics'} onClick={() => setActiveTab('statistics')}>
-          <span className="flex items-center gap-1"><BarChart3 className="h-4 w-4" />Statistics</span>
+          <span className="flex items-center gap-1">
+            <BarChart3 className="h-4 w-4" />
+            Statistics
+          </span>
         </TabButton>
         <TabButton active={activeTab === 'audit'} onClick={() => setActiveTab('audit')}>
-          <span className="flex items-center gap-1"><List className="h-4 w-4" />Audit Log</span>
+          <span className="flex items-center gap-1">
+            <List className="h-4 w-4" />
+            Audit Log
+          </span>
         </TabButton>
-        <TabButton active={activeTab === 'subscriptions'} onClick={() => setActiveTab('subscriptions')}>
-          <span className="flex items-center gap-1"><Settings className="h-4 w-4" />Subscriptions</span>
+        <TabButton
+          active={activeTab === 'subscriptions'}
+          onClick={() => setActiveTab('subscriptions')}
+        >
+          <span className="flex items-center gap-1">
+            <Settings className="h-4 w-4" />
+            Subscriptions
+          </span>
         </TabButton>
       </div>
 

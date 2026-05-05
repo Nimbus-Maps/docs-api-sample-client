@@ -127,14 +127,18 @@ export default function OrdersPage() {
                     <p className="text-xs text-muted-foreground">
                       {entry.titleNumber}
                       {entry.customerReference && ` · ${entry.customerReference}`}
-                      {' · '}{formatDate(entry.createdAt)}
+                      {' · '}
+                      {formatDate(entry.createdAt)}
                     </p>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0 ml-2"
-                    onClick={(e) => { e.stopPropagation(); handleRemove(entry.orderId); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemove(entry.orderId);
+                    }}
                     title="Remove from history"
                   >
                     <X className="h-3 w-3" />
@@ -235,7 +239,13 @@ export default function OrdersPage() {
                         {doc.webhook_delivery_status && (
                           <Badge
                             className="mt-1"
-                            variant={doc.webhook_delivery_status === 'SUCCESS' ? 'success' : doc.webhook_delivery_status === 'PENDING' ? 'secondary' : 'destructive'}
+                            variant={
+                              doc.webhook_delivery_status === 'SUCCESS'
+                                ? 'success'
+                                : doc.webhook_delivery_status === 'PENDING'
+                                  ? 'secondary'
+                                  : 'destructive'
+                            }
                           >
                             Webhook: {doc.webhook_delivery_status}
                           </Badge>

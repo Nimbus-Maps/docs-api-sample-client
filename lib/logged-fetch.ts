@@ -3,14 +3,19 @@ import { logHttpRequest, logHttpResponse, logHttpError } from './logger';
 /**
  * Wrap the native fetch API with HTTP logging
  * Logs full request and response including headers and body
- * 
+ *
  * @param input - Request URL or Request object
  * @param init - Request options
  * @returns Promise resolving to Response
  */
 // OAuth / form params that must never appear in logs
 const SENSITIVE_PARAMS = new Set([
-  'code', 'code_verifier', 'client_secret', 'refresh_token', 'access_token', 'password',
+  'code',
+  'code_verifier',
+  'client_secret',
+  'refresh_token',
+  'access_token',
+  'password',
 ]);
 
 /**
@@ -30,16 +35,13 @@ function sanitizeBodyForLogging(body: string): string {
   }
 }
 
-export async function loggedFetch(
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<Response> {
+export async function loggedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const startTime = Date.now();
-  
+
   // Extract URL and method for logging
   const url = input instanceof Request ? input.url : input.toString();
   const method = init?.method?.toUpperCase() || 'GET';
-  
+
   // Extract headers for logging
   let headers: Record<string, string> = {};
   if (init?.headers) {
@@ -55,7 +57,7 @@ export async function loggedFetch(
       headers = { ...init.headers };
     }
   }
-  
+
   // Log body if present (convert to string for logging)
   let bodyForLogging: unknown = undefined;
   if (init?.body) {
@@ -69,27 +71,27 @@ export async function loggedFetch(
       bodyForLogging = '[Binary or Stream Data]';
     }
   }
-  
+
   // Log the outgoing request
   logHttpRequest(method, url, headers, bodyForLogging);
-  
+
   try {
     // Make the actual fetch call
     const response = await fetch(input, init);
-    
+
     // Calculate duration
     const duration = Date.now() - startTime;
-    
+
     // Extract response headers
     const responseHeaders: Record<string, string> = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
-    
+
     // Clone response to read body without consuming it
     const clonedResponse = response.clone();
     let responseData: unknown = undefined;
-    
+
     try {
       // Try to parse as JSON
       const contentType = response.headers.get('content-type');
@@ -104,7 +106,7 @@ export async function loggedFetch(
       // If we can't read the body, just note it
       responseData = '[Unable to parse response body]';
     }
-    
+
     // Log the response
     logHttpResponse(
       method,
@@ -115,16 +117,16 @@ export async function loggedFetch(
       responseData,
       duration
     );
-    
+
     // Return the original response (not the cloned one)
     return response;
   } catch (error) {
     // Calculate duration
     const duration = Date.now() - startTime;
-    
+
     // Log the error
     logHttpError(method, url, error, duration);
-    
+
     // Re-throw the error
     throw error;
   }

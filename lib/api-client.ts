@@ -67,7 +67,9 @@ export function createDocumentApiClient(accessToken: string): AxiosInstance {
       // Log the response with full headers and data
       logHttpResponse(
         response.config.method?.toUpperCase() || 'GET',
-        response.config.baseURL ? `${response.config.baseURL}${response.config.url}` : response.config.url || '',
+        response.config.baseURL
+          ? `${response.config.baseURL}${response.config.url}`
+          : response.config.url || '',
         response.status,
         response.statusText,
         response.headers as Record<string, string>,
@@ -85,7 +87,9 @@ export function createDocumentApiClient(accessToken: string): AxiosInstance {
       // Log the error with full details
       logHttpError(
         error.config?.method?.toUpperCase() || 'UNKNOWN',
-        error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url || 'UNKNOWN',
+        error.config?.baseURL
+          ? `${error.config.baseURL}${error.config.url}`
+          : error.config?.url || 'UNKNOWN',
         error,
         duration
       );

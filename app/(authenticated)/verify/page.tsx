@@ -55,12 +55,16 @@ export default function VerifyPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const getMatchBadgeVariant = (match: string | undefined): 'success' | 'destructive' | 'secondary' => {
+  const getMatchBadgeVariant = (
+    match: string | undefined
+  ): 'success' | 'destructive' | 'secondary' => {
     if (!match) return 'secondary';
     return match === 'MATCH' ? 'success' : match === 'NO_MATCH' ? 'destructive' : 'secondary';
   };
 
-  const getMatchResultColor = (result: string): 'success' | 'warning' | 'destructive' | 'secondary' => {
+  const getMatchResultColor = (
+    result: string
+  ): 'success' | 'warning' | 'destructive' | 'secondary' => {
     switch (result) {
       case 'SINGLE_MATCH':
         return 'success';

@@ -19,13 +19,14 @@ const createMockApiError = (code = 'INTERNAL_ERROR', message = 'An error occurre
 });
 
 // Helper to build a mock axios client that includes interceptors (createDocumentApiClient registers them)
-const mockClient = (methods: Record<string, jest.Mock> = {}): AxiosInstance => ({
-  ...methods,
-  interceptors: {
-    request: { use: jest.fn() },
-    response: { use: jest.fn() },
-  },
-} as unknown as AxiosInstance);
+const mockClient = (methods: Record<string, jest.Mock> = {}): AxiosInstance =>
+  ({
+    ...methods,
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
+    },
+  }) as unknown as AxiosInstance;
 
 // Mock axios
 jest.mock('axios');

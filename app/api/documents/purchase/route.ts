@@ -31,7 +31,9 @@ export async function POST(request: NextRequest) {
       try {
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
         const webhookUrl = `${baseUrl}/api/webhooks/documents`;
-        const subscription = await subscribeWebhook(session.accessToken!, { webhook_url: webhookUrl });
+        const subscription = await subscribeWebhook(session.accessToken!, {
+          webhook_url: webhookUrl,
+        });
         const updatedSession = await getSession();
         updatedSession.webhookSecret = subscription.secret;
         updatedSession.webhookSubscriptionId = subscription.subscription_id;
@@ -41,19 +43,27 @@ export async function POST(request: NextRequest) {
         session.webhookSubscriptionId = subscription.subscription_id;
         // Persist as current subscription secret for fallback verification
         await storeCurrentSubscriptionSecret(subscription.subscription_id, subscription.secret);
-        logInfo('Auto-subscribed to webhooks during purchase', { subscriptionId: subscription.subscription_id });
+        logInfo('Auto-subscribed to webhooks during purchase', {
+          subscriptionId: subscription.subscription_id,
+        });
       } catch (subError) {
         const s = subError as { status?: number; message?: string };
         if (s.status === 409) {
           // Already subscribed on the API side but secret is missing from session.
           // The user can re-subscribe manually from the Webhooks page to restore the mapping.
-          logWarn('Auto-subscribe skipped: subscription already exists but secret is not in session', {
-            hint: 'User should re-subscribe from the Webhooks page',
-          });
+          logWarn(
+            'Auto-subscribe skipped: subscription already exists but secret is not in session',
+            {
+              hint: 'User should re-subscribe from the Webhooks page',
+            }
+          );
         } else {
-          logWarn('Auto-subscribe failed; webhook signature verification may not work for this order', {
-            error: s.message,
-          });
+          logWarn(
+            'Auto-subscribe failed; webhook signature verification may not work for this order',
+            {
+              error: s.message,
+            }
+          );
         }
       }
     }
