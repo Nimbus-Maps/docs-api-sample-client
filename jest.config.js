@@ -29,6 +29,7 @@ const config = {
             statements: 80,
         },
     },
+    coverageProvider: 'v8',
     coverageDirectory: 'coverage',
     testPathIgnorePatterns: ['/node_modules/', '/.next/', '/coverage/'],
     transformIgnorePatterns: [
