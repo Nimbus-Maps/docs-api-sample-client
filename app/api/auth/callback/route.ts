@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session';
 import { env } from '@/lib/env';
 import { logError, logInfo } from '@/lib/logger';
 import { loggedFetch } from '@/lib/logged-fetch';
+import { isClientCredentialsMode } from '@/lib/document-api-auth';
 
 /**
  * OAuth 2.0 Token Response from Azure AD
@@ -23,6 +24,10 @@ interface TokenResponse {
  */
 export async function GET(request: NextRequest) {
   try {
+    if (isClientCredentialsMode()) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state');
@@ -68,6 +73,10 @@ export async function GET(request: NextRequest) {
     const redirectUri = env.AZURE_REDIRECT_URI;
     const documentApiAppId = env.DOCUMENT_API_APP_ID;
 
+    if (!clientId || !redirectUri || !documentApiAppId) {
+      throw new Error('OBO authentication is not fully configured');
+    }
+
     // Build scopes: OIDC + Document API permissions
     const scopes = [
       'openid',
@@ -79,7 +88,7 @@ export async function GET(request: NextRequest) {
     ].join(' ');
 
     // Exchange authorization code for tokens using direct OAuth2 call
-    // This implements the public client PKCE flow as specified in the S2S guide
+    // This implements the public client PKCE flow for delegated user access.
     const tokenEndpoint = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
 
     const tokenRequestBody = new URLSearchParams({

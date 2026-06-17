@@ -35,6 +35,12 @@ function sanitizeBodyForLogging(body: string): string {
   }
 }
 
+function sanitizeParamsForLogging(params: Iterable<[string, FormDataEntryValue | string]>) {
+  return Object.fromEntries(
+    [...params].map(([key, value]) => [key, SENSITIVE_PARAMS.has(key) ? '[REDACTED]' : value])
+  );
+}
+
 export async function loggedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const startTime = Date.now();
 
@@ -64,9 +70,9 @@ export async function loggedFetch(input: RequestInfo | URL, init?: RequestInit):
     if (typeof init.body === 'string') {
       bodyForLogging = sanitizeBodyForLogging(init.body);
     } else if (init.body instanceof URLSearchParams) {
-      bodyForLogging = Object.fromEntries(init.body.entries());
+      bodyForLogging = sanitizeParamsForLogging(init.body.entries());
     } else if (init.body instanceof FormData) {
-      bodyForLogging = Object.fromEntries(init.body.entries());
+      bodyForLogging = sanitizeParamsForLogging(init.body.entries());
     } else {
       bodyForLogging = '[Binary or Stream Data]';
     }

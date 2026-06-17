@@ -1,16 +1,29 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight } from 'lucide-react';
+import type { SessionInfo } from '@/lib/types';
+
+async function fetchSession(): Promise<SessionInfo> {
+  const res = await fetch('/api/auth/session');
+  if (!res.ok) throw new Error('Failed to fetch session');
+  return res.json();
+}
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: fetchSession,
+  });
+  const isClientCredentials = session?.authMode === 'client_credentials';
 
   const handleLogin = () => {
-    window.location.href = '/api/auth/login';
+    window.location.href = isClientCredentials ? '/dashboard' : '/api/auth/login';
   };
 
   return (
@@ -32,19 +45,29 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground text-center">
-              Sign in with your Azure AD account to access the Nimbus Document Purchase API demo.
+              {isClientCredentials
+                ? 'This app is configured to call the Nimbus Document Purchase API with Entra client credentials.'
+                : 'Sign in with your Azure AD account to access the Nimbus Document Purchase API demo.'}
             </p>
           </div>
 
           <Button onClick={handleLogin} className="w-full" size="lg">
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 23 23" fill="currentColor">
-              <path d="M0 0h10.933v10.933H0zm12.067 0H23v10.933H12.067zM0 12.067h10.933V23H0zm12.067 0H23V23H12.067z" />
-            </svg>
-            Sign in with Microsoft
+            {isClientCredentials ? (
+              <ArrowRight className="w-5 h-5 mr-2" />
+            ) : (
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 23 23" fill="currentColor">
+                <path d="M0 0h10.933v10.933H0zm12.067 0H23v10.933H12.067zM0 12.067h10.933V23H0zm12.067 0H23V23H12.067z" />
+              </svg>
+            )}
+            {isClientCredentials ? 'Continue to dashboard' : 'Sign in with Microsoft'}
           </Button>
 
           <div className="text-xs text-muted-foreground text-center space-y-1 pt-4 border-t">
-            <p>This application demonstrates OAuth 2.0 authentication with PKCE</p>
+            <p>
+              {isClientCredentials
+                ? 'This application demonstrates OAuth 2.0 client credentials'
+                : 'This application demonstrates OAuth 2.0 authentication with PKCE'}
+            </p>
             <p>and integration with the Nimbus Document Purchase API.</p>
           </div>
         </CardContent>

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, getSession } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { purchaseDocuments, subscribeWebhook } from '@/lib/api-client';
 import { PurchaseRequest } from '@/lib/types';
 import { logError, logInfo, logWarn } from '@/lib/logger';
-import { storeCurrentSubscriptionSecret } from '@/lib/webhook-secrets';
+import {
+  getCurrentWebhookSubscription,
+  storeCurrentSubscriptionSecret,
+} from '@/lib/webhook-secrets';
 
 /**
  * POST /api/documents/purchase
@@ -11,7 +14,7 @@ import { storeCurrentSubscriptionSecret } from '@/lib/webhook-secrets';
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
 
     const body: PurchaseRequest = await request.json();
 
@@ -23,24 +26,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await purchaseDocuments(session.accessToken!, body);
+    const data = await purchaseDocuments(auth.accessToken, body);
+
+    let currentSubscription = await getCurrentWebhookSubscription();
+    if (!currentSubscription && auth.session?.webhookSecret && auth.session.webhookSubscriptionId) {
+      await storeCurrentSubscriptionSecret(
+        auth.session.webhookSubscriptionId,
+        auth.session.webhookSecret
+      );
+      currentSubscription = {
+        subscriptionId: auth.session.webhookSubscriptionId,
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    const hasSessionSubscription =
+      !!auth.session?.webhookSecret && !!auth.session.webhookSubscriptionId;
+    const shouldSubscribe =
+      auth.mode === 'client_credentials' ? !currentSubscription : !hasSessionSubscription;
 
     // Ensure there is a webhook subscription. Auto-subscribe if one is not already
-    // recorded in the session so that every purchase produces a verifiable webhook.
-    if (!session.webhookSecret || !session.webhookSubscriptionId) {
+    // recorded for the current auth context so that purchases produce verifiable webhooks.
+    if (shouldSubscribe) {
       try {
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
         const webhookUrl = `${baseUrl}/api/webhooks/documents`;
-        const subscription = await subscribeWebhook(session.accessToken!, {
+        const subscription = await subscribeWebhook(auth.accessToken, {
           webhook_url: webhookUrl,
         });
-        const updatedSession = await getSession();
-        updatedSession.webhookSecret = subscription.secret;
-        updatedSession.webhookSubscriptionId = subscription.subscription_id;
-        await updatedSession.save();
-        // Update the in-memory reference so storeWebhookSecretForOrder below uses the new values
-        session.webhookSecret = subscription.secret;
-        session.webhookSubscriptionId = subscription.subscription_id;
+
+        if (auth.session) {
+          auth.session.webhookSecret = subscription.secret;
+          auth.session.webhookSubscriptionId = subscription.subscription_id;
+          await auth.session.save();
+        }
+
         // Persist as current subscription secret for fallback verification
         await storeCurrentSubscriptionSecret(subscription.subscription_id, subscription.secret);
         logInfo('Auto-subscribed to webhooks during purchase', {
@@ -49,12 +69,12 @@ export async function POST(request: NextRequest) {
       } catch (subError) {
         const s = subError as { status?: number; message?: string };
         if (s.status === 409) {
-          // Already subscribed on the API side but secret is missing from session.
-          // The user can re-subscribe manually from the Webhooks page to restore the mapping.
+          // Already subscribed on the API side but the local secret mapping is missing.
+          // Re-subscribe manually from the Webhooks page to restore the mapping.
           logWarn(
-            'Auto-subscribe skipped: subscription already exists but secret is not in session',
+            'Auto-subscribe skipped: subscription already exists but secret is not stored locally',
             {
-              hint: 'User should re-subscribe from the Webhooks page',
+              hint: 'Re-subscribe from the Webhooks page',
             }
           );
         } else {

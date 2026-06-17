@@ -104,7 +104,7 @@ export async function getSession(): Promise<ExtendedSession> {
 /**
  * Require authentication - throws error if not authenticated
  */
-export async function requireAuth(): Promise<SessionData> {
+export async function requireAuth(): Promise<ExtendedSession & { accessToken: string }> {
   const session = await getSession();
 
   if (!session.isAuthenticated || !session.accessToken) {
@@ -116,7 +116,7 @@ export async function requireAuth(): Promise<SessionData> {
     throw new Error('Token expired');
   }
 
-  return session as SessionData & { accessToken: string };
+  return session as ExtendedSession & { accessToken: string };
 }
 
 /**

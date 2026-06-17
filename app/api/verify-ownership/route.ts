@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { verifyOwnership } from '@/lib/api-client';
 import { VerifyOwnershipRequest } from '@/lib/types';
 import { logError } from '@/lib/logger';
@@ -10,7 +10,7 @@ import { logError } from '@/lib/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
 
     const body: VerifyOwnershipRequest = await request.json();
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await verifyOwnership(session.accessToken!, body);
+    const data = await verifyOwnership(auth.accessToken, body);
 
     return NextResponse.json(data);
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { getWebhookEventDetails } from '@/lib/api-client';
 import { logError } from '@/lib/logger';
 
@@ -12,10 +12,10 @@ export async function GET(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
     const { eventId } = await params;
 
-    const data = await getWebhookEventDetails(session.accessToken!, eventId);
+    const data = await getWebhookEventDetails(auth.accessToken, eventId);
 
     return NextResponse.json(data);
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, getSession } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { subscribeWebhook } from '@/lib/api-client';
 import { logError } from '@/lib/logger';
 import { storeCurrentSubscriptionSecret } from '@/lib/webhook-secrets';
@@ -10,21 +10,21 @@ import { storeCurrentSubscriptionSecret } from '@/lib/webhook-secrets';
  */
 export async function POST(_request: NextRequest) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
 
     // Get the base URL for webhooks
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
     const webhookUrl = `${baseUrl}/api/webhooks/documents`;
 
-    const data = await subscribeWebhook(session.accessToken!, {
+    const data = await subscribeWebhook(auth.accessToken, {
       webhook_url: webhookUrl,
     });
 
-    // Store webhook secret and subscription ID in session
-    const updatedSession = await getSession();
-    updatedSession.webhookSecret = data.secret;
-    updatedSession.webhookSubscriptionId = data.subscription_id;
-    await updatedSession.save();
+    if (auth.session) {
+      auth.session.webhookSecret = data.secret;
+      auth.session.webhookSubscriptionId = data.subscription_id;
+      await auth.session.save();
+    }
 
     // Persist the current subscription secret so webhooks for all orders can be verified
     await storeCurrentSubscriptionSecret(data.subscription_id, data.secret);

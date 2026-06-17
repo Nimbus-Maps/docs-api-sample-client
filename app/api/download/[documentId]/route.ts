@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { downloadDocument } from '@/lib/api-client';
 import { logError } from '@/lib/logger';
 
@@ -12,10 +12,10 @@ export async function GET(
   { params }: { params: Promise<{ documentId: string }> }
 ) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
     const { documentId } = await params;
 
-    const data = await downloadDocument(session.accessToken!, documentId);
+    const data = await downloadDocument(auth.accessToken, documentId);
 
     // Convert base64 content to buffer
     const buffer = Buffer.from(data.content, 'base64');

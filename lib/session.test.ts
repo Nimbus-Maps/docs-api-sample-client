@@ -110,15 +110,20 @@ describe('Session Utilities', () => {
 
     it('should allow token that expires exactly now', async () => {
       const now = Date.now();
+      const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(now);
       mockLoadSession.mockResolvedValue({
         isAuthenticated: true,
         accessToken: 'valid-token',
         expiresAt: now,
       });
 
-      // Token expired if expiresAt < Date.now(), so equal should pass
-      const result = await requireAuth();
-      expect(result.accessToken).toBe('valid-token');
+      try {
+        // Token expired if expiresAt < Date.now(), so equal should pass
+        const result = await requireAuth();
+        expect(result.accessToken).toBe('valid-token');
+      } finally {
+        dateNowSpy.mockRestore();
+      }
     });
   });
 

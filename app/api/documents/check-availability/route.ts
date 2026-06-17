@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { checkAvailability } from '@/lib/api-client';
 import { logError } from '@/lib/logger';
 
@@ -9,7 +9,7 @@ import { logError } from '@/lib/logger';
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
 
     const searchParams = request.nextUrl.searchParams;
     const title_number = searchParams.get('title_number');
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await checkAvailability(session.accessToken!, {
+    const data = await checkAvailability(auth.accessToken, {
       title_number: title_number || undefined,
       title_id: title_id || undefined,
     });

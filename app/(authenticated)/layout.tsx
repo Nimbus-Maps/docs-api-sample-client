@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
-import { SessionInfo } from '@/lib/types';
+import type { SessionInfo } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu } from 'lucide-react';
 import Link from 'next/link';
@@ -55,6 +55,8 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     );
   }
 
+  const showLogout = session?.authMode === 'obo';
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -89,12 +91,14 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
                 })}
               </div>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:items-center">
-              <Button onClick={handleLogout} variant="ghost" size="sm">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+            {showLogout && (
+              <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                <Button onClick={handleLogout} variant="ghost" size="sm">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            )}
             <div className="flex items-center sm:hidden">
               <Button
                 variant="ghost"
@@ -133,12 +137,14 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
                   </Link>
                 );
               })}
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-              >
-                Logout
-              </button>
+              {showLogout && (
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         )}

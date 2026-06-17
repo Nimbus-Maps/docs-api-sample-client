@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { getOrderStatus } from '@/lib/api-client';
 import { logError } from '@/lib/logger';
 
@@ -12,10 +12,10 @@ export async function GET(
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
     const { orderId } = await params;
 
-    const data = await getOrderStatus(session.accessToken!, orderId);
+    const data = await getOrderStatus(auth.accessToken, orderId);
 
     return NextResponse.json(data);
   } catch (error) {
