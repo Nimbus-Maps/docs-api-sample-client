@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,25 @@ async function fetchSession(): Promise<SessionInfo> {
   return res.json();
 }
 
-export default function LoginPage() {
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">
+            Nimbus Document Purchase API
+          </CardTitle>
+          <CardDescription className="text-center">Sample Client Application</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="h-10" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const { data: session } = useQuery({
@@ -73,5 +92,13 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
   );
 }
