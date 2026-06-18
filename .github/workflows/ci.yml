@@ -76,6 +76,15 @@ jobs:
         run: npm ci
 
       - name: Build application
+        env:
+          DOCUMENT_API_AUTH_MODE: obo
+          AZURE_TENANT_ID: ci-tenant-id
+          AZURE_CLIENT_ID: ci-client-id
+          AZURE_REDIRECT_URI: http://localhost:3000/api/auth/callback
+          DOCUMENT_API_URL: https://api.nimbusmaps.xyz/docs/v1
+          DOCUMENT_API_APP_ID: ci-docs-api-app-id
+          NEXTAUTH_URL: http://localhost:3000
+          SESSION_SECRET: ci-session-secret-at-least-32-characters-long
         run: npm run build
 
       - name: Archive build artifacts
