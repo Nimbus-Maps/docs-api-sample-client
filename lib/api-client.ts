@@ -287,7 +287,11 @@ function handleApiError(error: unknown): Error {
       return err;
     }
 
-    return new Error(axiosError.message || 'API request failed');
+    const err = new Error(axiosError.message || 'API request failed') as Error & {
+      status?: number;
+    };
+    err.status = axiosError.response?.status;
+    return err;
   }
 
   return error instanceof Error ? error : new Error('Unknown error occurred');
