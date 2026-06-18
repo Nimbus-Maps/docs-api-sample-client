@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
+import type {
   WebhookEvent,
   WebhookAuditItem,
   WebhookAuditResponse,
@@ -634,13 +634,13 @@ function SubscriptionsTab() {
     queryKey: ['current-subscription'],
     queryFn: async () => {
       const res = await fetch('/api/auth/session');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.webhookSubscriptionId) {
-          setSubscriptionId(data.webhookSubscriptionId);
-        }
+      if (!res.ok) {
+        throw new Error('Failed to fetch current subscription');
       }
-      return null;
+      const data = await res.json();
+      const currentSubscriptionId = data.webhookSubscriptionId ?? null;
+      setSubscriptionId(currentSubscriptionId);
+      return currentSubscriptionId;
     },
   });
 
@@ -659,6 +659,7 @@ function SubscriptionsTab() {
       setErrorMessage('');
       queryClient.invalidateQueries({ queryKey: ['webhook-audit'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);
@@ -680,6 +681,7 @@ function SubscriptionsTab() {
       setSuccessMessage('Subscription created successfully');
       setErrorMessage('');
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);

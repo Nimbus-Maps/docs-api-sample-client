@@ -52,6 +52,11 @@ async function saveSecrets(secrets: WebhookSecretMapping): Promise<void> {
 // Reserved key for the currently active subscription's secret
 const CURRENT_SUBSCRIPTION_KEY = '_current_subscription';
 
+export interface CurrentWebhookSubscription {
+  subscriptionId: string;
+  createdAt: string;
+}
+
 /**
  * Store the current subscription's secret.
  * Call this whenever a new subscription is created so that webhooks for any
@@ -69,6 +74,43 @@ export async function storeCurrentSubscriptionSecret(
   };
   await saveSecrets(secrets);
   logInfo('Stored current subscription secret', { subscriptionId });
+}
+
+/**
+ * Retrieve the current app-level subscription without exposing its secret.
+ */
+export async function getCurrentWebhookSubscription(): Promise<CurrentWebhookSubscription | null> {
+  const secrets = await loadSecrets();
+  const current = secrets[CURRENT_SUBSCRIPTION_KEY];
+
+  if (!current) {
+    return null;
+  }
+
+  return {
+    subscriptionId: current.subscriptionId,
+    createdAt: current.createdAt,
+  };
+}
+
+/**
+ * Clear the current subscription secret after unsubscribing.
+ */
+export async function clearCurrentSubscriptionSecret(subscriptionId?: string): Promise<void> {
+  const secrets = await loadSecrets();
+  const current = secrets[CURRENT_SUBSCRIPTION_KEY];
+
+  if (!current) {
+    return;
+  }
+
+  if (subscriptionId && current.subscriptionId !== subscriptionId) {
+    return;
+  }
+
+  delete secrets[CURRENT_SUBSCRIPTION_KEY];
+  await saveSecrets(secrets);
+  logInfo('Cleared current subscription secret', { subscriptionId: current.subscriptionId });
 }
 
 /**

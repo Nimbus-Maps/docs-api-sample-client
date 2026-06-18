@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse } from '@/lib/types';
+import type { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse } from '@/lib/types';
 import { formatTokens, formatDate } from '@/lib/utils';
 import { addOrderToHistory } from '@/lib/order-history';
 import { Search, ShoppingCart, Check, AlertCircle, Info } from 'lucide-react';

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, getSession } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { unsubscribeWebhook } from '@/lib/api-client';
 import { logError } from '@/lib/logger';
+import { clearCurrentSubscriptionSecret } from '@/lib/webhook-secrets';
 
 /**
  * DELETE /api/webhooks/subscriptions/[id]
@@ -12,11 +13,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
     const { id } = await params;
 
     try {
-      await unsubscribeWebhook(session.accessToken!, id);
+      await unsubscribeWebhook(auth.accessToken, id);
     } catch (error) {
       // 404 means the subscription no longer exists — treat as success
       if ((error as { status?: number }).status !== 404) {
@@ -24,11 +25,13 @@ export async function DELETE(
       }
     }
 
-    // Clear webhook fields from session so the dashboard reflects the change
-    const currentSession = await getSession();
-    currentSession.webhookSecret = undefined;
-    currentSession.webhookSubscriptionId = undefined;
-    await currentSession.save();
+    if (auth.session) {
+      auth.session.webhookSecret = undefined;
+      auth.session.webhookSubscriptionId = undefined;
+      await auth.session.save();
+    }
+
+    await clearCurrentSubscriptionSecret(id);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

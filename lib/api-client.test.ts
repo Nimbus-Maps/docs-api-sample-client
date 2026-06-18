@@ -5,6 +5,7 @@ import {
   purchaseDocuments,
   getOrderStatus,
   subscribeWebhook,
+  unsubscribeWebhook,
   downloadDocument,
   verifyOwnership,
 } from './api-client';
@@ -288,6 +289,30 @@ describe('API Client', () => {
       await expect(checkAvailability(accessToken, { title_number: 'DN1234567' })).rejects.toThrow(
         'Network Error'
       );
+    });
+
+    it('should preserve HTTP status when API error response has no error payload', async () => {
+      const mockError: AxiosError = {
+        isAxiosError: true,
+        message: 'Request failed with status code 404',
+        response: {
+          status: 404,
+          data: {},
+        },
+      } as unknown as AxiosError;
+
+      const mockDelete = jest.fn().mockRejectedValue(mockError);
+      mockedAxios.create = jest.fn().mockReturnValue(mockClient({ delete: mockDelete }));
+      mockedAxios.isAxiosError.mockReturnValue(true);
+
+      try {
+        await unsubscribeWebhook(accessToken, 'missing-subscription');
+        fail('Should have thrown error');
+      } catch (error) {
+        const e = error as Error & { status?: number };
+        expect(e.message).toBe('Request failed with status code 404');
+        expect(e.status).toBe(404);
+      }
     });
 
     it('should handle unknown errors', async () => {

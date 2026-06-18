@@ -1,7 +1,7 @@
 import { getSession, requireAuth, SessionData } from './session';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
-import { loadSession } from './session-store';
+import { cleanupExpiredSessions, loadSession } from './session-store';
 
 // Mock iron-session, next/headers, and the file-backed session store
 jest.mock('iron-session');
@@ -11,10 +11,14 @@ jest.mock('./session-store');
 const mockGetIronSession = getIronSession as jest.MockedFunction<typeof getIronSession>;
 const mockCookies = cookies as jest.MockedFunction<typeof cookies>;
 const mockLoadSession = loadSession as jest.MockedFunction<typeof loadSession>;
+const mockCleanupExpiredSessions = cleanupExpiredSessions as jest.MockedFunction<
+  typeof cleanupExpiredSessions
+>;
 
 describe('Session Utilities', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Math, 'random').mockReturnValue(0.5);
     mockCookies.mockResolvedValue({} as unknown as Awaited<ReturnType<typeof cookies>>);
     // Cookie session only holds a sessionId; save() is called internally
     mockGetIronSession.mockResolvedValue({
@@ -23,6 +27,11 @@ describe('Session Utilities', () => {
     } as unknown as Awaited<ReturnType<typeof getIronSession>>);
     // Default: session data not found in store
     mockLoadSession.mockResolvedValue(null);
+    mockCleanupExpiredSessions.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('getSession', () => {
@@ -110,15 +119,20 @@ describe('Session Utilities', () => {
 
     it('should allow token that expires exactly now', async () => {
       const now = Date.now();
+      const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(now);
       mockLoadSession.mockResolvedValue({
         isAuthenticated: true,
         accessToken: 'valid-token',
         expiresAt: now,
       });
 
-      // Token expired if expiresAt < Date.now(), so equal should pass
-      const result = await requireAuth();
-      expect(result.accessToken).toBe('valid-token');
+      try {
+        // Token expired if expiresAt < Date.now(), so equal should pass
+        const result = await requireAuth();
+        expect(result.accessToken).toBe('valid-token');
+      } finally {
+        dateNowSpy.mockRestore();
+      }
     });
   });
 

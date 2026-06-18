@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/session';
+import { ZodError } from 'zod';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { verifyOwnership } from '@/lib/api-client';
-import { VerifyOwnershipRequest } from '@/lib/types';
 import { logError } from '@/lib/logger';
+import { parseVerifyOwnershipRequest } from '@/lib/verify-ownership-validation';
 
 /**
  * POST /api/verify-ownership
@@ -10,12 +11,18 @@ import { logError } from '@/lib/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
 
-    const body: VerifyOwnershipRequest = await request.json();
+    const body = parseVerifyOwnershipRequest(await request.json());
 
-    // Validate request body
-    if (!body.title_number || !body.first_forename || !body.surname) {
+    const data = await verifyOwnership(auth.accessToken, body);
+
+    return NextResponse.json(data);
+  } catch (error) {
+    const e = error as { message?: string; code?: string; status?: number };
+    logError(error, 'Verify ownership error');
+
+    if (error instanceof ZodError) {
       return NextResponse.json(
         {
           error: {
@@ -26,13 +33,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const data = await verifyOwnership(session.accessToken!, body);
-
-    return NextResponse.json(data);
-  } catch (error) {
-    const e = error as { message?: string; code?: string; status?: number };
-    logError(error, 'Verify ownership error');
 
     if (e.message === 'Unauthorized' || e.message === 'Token expired') {
       return NextResponse.json(

@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { OrderStatusResponse, OrderDocument } from '@/lib/types';
+import type { OrderStatusResponse, OrderDocument } from '@/lib/types';
 import { formatDate, formatTokens } from '@/lib/utils';
-import { getOrderHistory, removeOrderFromHistory, OrderHistoryEntry } from '@/lib/order-history';
+import { getOrderHistory, removeOrderFromHistory } from '@/lib/order-history';
+import type { OrderHistoryEntry } from '@/lib/order-history';
 import { Download, RefreshCw, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 

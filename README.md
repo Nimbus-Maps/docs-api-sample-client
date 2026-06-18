@@ -4,7 +4,7 @@ A full-stack Next.js sample application demonstrating integration with the Nimbu
 
 ## Features
 
-- **OAuth 2.0 with PKCE**: Secure Azure AD authentication with Proof Key for Code Exchange
+- **OAuth 2.0 auth modes**: Run with delegated OBO-style PKCE or Entra client credentials
 - **Document Search**: Check availability of title documents (register, title plans)
 - **Document Purchase**: Buy documents with automatic token management
 - **Ownership Verification**: Verify if a person is the registered proprietor
@@ -15,9 +15,14 @@ A full-stack Next.js sample application demonstrating integration with the Nimbu
 
 ## Why This Architecture?
 
+This sample can run in two authentication modes:
+
+- `obo` - users sign in with Microsoft and the app calls the Document API with the user's delegated access token.
+- `client_credentials` - the app obtains its own Entra access token using a client ID and client secret, then calls the Document API server-to-server.
+
 ### On-Behalf-Of (OBO) Authentication
 
-The Nimbus Document Purchase API requires **On-Behalf-Of (OBO) authentication** to ensure every document purchase is tied to a specific authenticated end user. This isn't just authentication—it's about accountability and authorization:
+In `obo` mode, every document purchase is tied to a specific authenticated end user. This isn't just authentication—it's about accountability and authorization:
 
 - ✅ **User accountability**: Every purchase is traceable to a real user
 - ✅ **Proper authorization**: Token balances and permissions validated per user
@@ -26,7 +31,7 @@ The Nimbus Document Purchase API requires **On-Behalf-Of (OBO) authentication** 
 
 ### Backend-for-Frontend (BFF) Pattern
 
-This sample implements a **BFF (Backend-for-Frontend)** pattern where:
+In `obo` mode, this sample implements a **BFF (Backend-for-Frontend)** pattern where:
 
 1. **Your Next.js server** authenticates users against the Nimbus Azure AD tenant
 2. **Users grant consent** for your application to access the Document API on their behalf
@@ -65,12 +70,23 @@ Your app must be registered in the **Nimbus Azure AD tenant** (not your own tena
 
 Contact Nimbus to request an app registration in their tenant.
 
+### Server-to-Server Client Credentials
+
+In `client_credentials` mode, the app uses an Entra app registration and client secret to acquire a short-lived access token from the Nimbus tenant:
+
+1. **Your Next.js server** posts `client_id`, `client_secret`, `grant_type=client_credentials`, and a `.default` scope to Entra.
+2. **Entra returns** a one-hour bearer token with the app roles granted to the integration.
+3. **Your server caches** that token until shortly before expiry.
+4. **The Document API validates** the bearer token through APIM before processing the request.
+
+Use this mode for service integrations where there is no interactive end user.
+
 ## Prerequisites
 
 - Node.js 18.x or later
 - npm or yarn
 - Access to the Nimbus Document Purchase API
-- Azure AD app registration (for OAuth)
+- Azure AD app registration for the auth mode you want to use
 
 ## Quick Start
 
@@ -92,10 +108,18 @@ cp .env.local.example .env.local
 Edit `.env.local` with your credentials:
 
 ```bash
-# Azure AD OAuth Configuration (provided by Nimbus)
+# Auth mode: "obo" or "client_credentials"
+DOCUMENT_API_AUTH_MODE=obo
+
+# Azure AD OAuth Configuration for OBO mode (provided by Nimbus)
 AZURE_TENANT_ID=d2a91423-0dc1-4853-8515-7b7b7d262791
 AZURE_CLIENT_ID=your-azure-client-id
 AZURE_REDIRECT_URI=http://localhost:3000/api/auth/callback
+
+# Entra client credentials for client_credentials mode
+# ENTRA_CLIENT_ID=your-entra-client-id
+# ENTRA_CLIENT_SECRET=your-entra-client-secret
+# DOCUMENT_API_SCOPE=api://f995e7f1-7a92-4c17-82a7-3187c5b158bf/.default
 
 # Document API Configuration
 DOCUMENT_API_URL=https://api-preprod.nimbusmaps.xyz/docs/v1
@@ -112,7 +136,7 @@ SESSION_SECRET=your-random-32-char-secret
 
 **Important:** Your Azure AD app registration must be created by Nimbus in the **Nimbus tenant** (not your own Azure AD tenant). This is required because the OAuth scopes (`docs.read`, `docs.purchase`) are defined in the Nimbus tenant where the Document API is registered.
 
-**To get started:**
+**For OBO mode:**
 
 1. Contact Nimbus and provide:
    - Your organization name
@@ -137,6 +161,14 @@ SESSION_SECRET=your-random-32-char-secret
 **Why PKCE without client secret?**
 This sample uses OAuth 2.0 Authorization Code Flow with PKCE (Proof Key for Code Exchange), which provides security through cryptographic challenges rather than client secrets. This is the recommended approach for server-side applications acting as a Backend-for-Frontend (BFF) proxy.
 
+**For client_credentials mode:**
+
+1. Contact Nimbus and request an Entra app registration for server-to-server access.
+2. Confirm the environments you need and the app roles required, such as `docs.read`, `docs.purchase`, and `docs.webhooks.manage`.
+3. Nimbus will provide an Entra Client ID and Client Secret.
+4. Set `DOCUMENT_API_AUTH_MODE=client_credentials`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`, and `DOCUMENT_API_SCOPE`.
+5. Use the pre-production scope `api://f995e7f1-7a92-4c17-82a7-3187c5b158bf/.default` or production scope `api://d5ddd66b-0c00-4c46-bb81-672727b71aa5/.default`.
+
 ### 5. Subscribe to Webhooks (Important!)
 
 Before making your first purchase, subscribe to webhooks via the UI:
@@ -146,7 +178,7 @@ Before making your first purchase, subscribe to webhooks via the UI:
 3. The app will:
    - Call the Document API's `/subscribe` endpoint with your webhook URL
    - Receive a unique `subscription_id` and `secret` for your subscription
-   - Store the secret in your session and in `webhook-secrets.json` under the `_current_subscription` key
+   - Store the secret in `webhook-secrets.json` under the `_current_subscription` key and, in `obo` mode, in your session
 
 **Important:** All incoming webhook events are signed with the **subscription secret**, not a per-order secret. You do not need to re-subscribe between purchases. If you restart the backend and re-subscribe, the new secret is automatically stored and used for all future (and existing) orders.
 
@@ -166,8 +198,8 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript 5.7
-- **Authentication**: OAuth 2.0 with PKCE (Proof Key for Code Exchange)
-- **Session Management**: iron-session (encrypted cookies) + file-based token storage
+- **Authentication**: OAuth 2.0 with PKCE or Entra client credentials
+- **Session Management**: iron-session for OBO mode + in-memory S2S token cache
 - **State Management**: @tanstack/react-query
 - **UI Framework**: Tailwind CSS + shadcn/ui (Radix UI)
 - **HTTP Client**: Axios
@@ -198,6 +230,8 @@ sample-client/
 ├── components/ui/                # UI components (shadcn)
 ├── lib/                          # Shared utilities
 │   ├── api-client.ts             # Document API client
+│   ├── document-api-auth.ts      # Auth mode resolver for Document API calls
+│   ├── client-credentials-token.ts # Entra client credentials token cache
 │   ├── session.ts                # Session management (hybrid cookie + file)
 │   ├── session-store.ts          # File-based session storage
 │   ├── pkce.ts                   # PKCE utilities
@@ -211,6 +245,8 @@ sample-client/
 
 ### Authentication Flow
 
+In `obo` mode:
+
 1. **Login**: User clicks "Sign in with Microsoft" → redirects to Azure AD
 2. **PKCE Generation**: App generates code_verifier and code_challenge
 3. **Authorization**: Azure AD authenticates user and returns authorization code
@@ -219,9 +255,16 @@ sample-client/
 6. **API Calls**: Access token included in Authorization header for API requests
 7. **Token Refresh**: Refresh token used to obtain new access token before expiry
 
+In `client_credentials` mode:
+
+1. **Token Acquisition**: The server requests an app-only token from Entra using `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`, and `DOCUMENT_API_SCOPE`.
+2. **Token Cache**: The token is cached in memory until 60 seconds before expiry.
+3. **API Calls**: The app-only token is included in the Authorization header for Document API requests.
+4. **UI Access**: The dashboard is available without Microsoft sign-in because there is no delegated user session.
+
 ### Session Management
 
-To avoid browser cookie size limits (4KB), this sample uses a **hybrid session approach**:
+In `obo` mode, this sample uses a **hybrid session approach** to avoid browser cookie size limits (4KB):
 
 - **Cookie**: Stores only an encrypted session ID (small, ~100 bytes)
 - **File System**: Stores actual session data (tokens, user state) in `.sessions/` directory
@@ -255,12 +298,11 @@ All Document API calls go through Next.js API routes (`/api/*`) rather than dire
 
 ## Usage Guide
 
-### 1. Login
+### 1. Open the App
 
 1. Navigate to http://localhost:3000
-2. Click "Sign in with Microsoft"
-3. Authenticate with your Azure AD credentials
-4. You'll be redirected to the dashboard
+2. In `obo` mode, click "Sign in with Microsoft" and authenticate with your Azure AD credentials
+3. In `client_credentials` mode, the dashboard opens without user sign-in
 
 ### 2. Check Document Availability
 
@@ -467,16 +509,20 @@ const verification = await api.verifyOwnership({
 
 ## Session Management
 
-Sessions are managed using iron-session with encrypted cookies:
+In `obo` mode, sessions are managed using iron-session with encrypted cookies. In `client_credentials` mode, Document API calls use an app-level token cache and do not require a user session.
 
 ```typescript
 import { getSession, requireAuth } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 
 // Get session (may be empty)
 const session = await getSession();
 
 // Require authentication (throws if not authenticated)
 const session = await requireAuth();
+
+// Get the bearer token for the configured Document API auth mode
+const auth = await requireDocumentApiAuth();
 
 // Session data structure
 interface SessionData {
@@ -504,8 +550,8 @@ interface SessionData {
 
 **Error: `401 Unauthorized`**
 
-- Access token may have expired (check session)
-- Try logging out and logging back in
+- In `obo` mode, the access token may have expired; try logging out and logging back in
+- In `client_credentials` mode, confirm `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`, `DOCUMENT_API_SCOPE`, and app role grants
 
 **Error: `402 Payment Required`**
 
@@ -647,7 +693,7 @@ HTTP logging is automatically disabled in test environments and when `NODE_ENV=p
 The HTTP logger is separate from the main application logger:
 
 - Main logger (`lib/logger.ts`): **Always redacts** authorization headers and tokens
-- HTTP logger: **Never redacts** (only for debugging)
+- HTTP logger: Redacts authorization headers, OAuth token response fields, and sensitive OAuth form parameters
 - Production safety: HTTP logging disabled by default and requires explicit `ENABLE_HTTP_LOGGING=true`
 
 **Best Practice:** Only enable HTTP logging temporarily when debugging specific issues, then disable it immediately.
@@ -659,9 +705,13 @@ The HTTP logger is separate from the main application logger:
 Ensure all environment variables are set in your production environment:
 
 ```bash
+DOCUMENT_API_AUTH_MODE=obo
 AZURE_TENANT_ID=d2a91423-0dc1-4853-8515-7b7b7d262791
 AZURE_CLIENT_ID=prod-client-id
 AZURE_REDIRECT_URI=https://yourdomain.com/api/auth/callback
+# ENTRA_CLIENT_ID=prod-entra-client-id
+# ENTRA_CLIENT_SECRET=prod-entra-client-secret
+# DOCUMENT_API_SCOPE=api://d5ddd66b-0c00-4c46-bb81-672727b71aa5/.default
 DOCUMENT_API_URL=https://api.nimbusmaps.co.uk/docs/v1
 DOCUMENT_API_APP_ID=d5ddd66b-0c00-4c46-bb81-672727b71aa5
 NEXTAUTH_URL=https://yourdomain.com

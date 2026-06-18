@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { logError } from '@/lib/logger';
+import { isClientCredentialsMode } from '@/lib/document-api-auth';
 
 /**
  * POST /api/auth/logout
@@ -8,6 +9,10 @@ import { logError } from '@/lib/logger';
  */
 export async function POST(_request: NextRequest) {
   try {
+    if (isClientCredentialsMode()) {
+      return NextResponse.json({ success: true });
+    }
+
     const session = await getSession();
 
     // Clear all session data

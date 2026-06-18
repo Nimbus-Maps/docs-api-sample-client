@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/session';
+import { requireDocumentApiAuth } from '@/lib/document-api-auth';
 import { getWebhookAudit } from '@/lib/api-client';
 import { logError } from '@/lib/logger';
 
@@ -9,11 +9,11 @@ import { logError } from '@/lib/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth();
+    const auth = await requireDocumentApiAuth();
 
     const body = await request.json().catch(() => ({}));
 
-    const data = await getWebhookAudit(session.accessToken!, body);
+    const data = await getWebhookAudit(auth.accessToken, body);
 
     return NextResponse.json(data);
   } catch (error) {

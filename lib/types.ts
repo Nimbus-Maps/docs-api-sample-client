@@ -284,6 +284,7 @@ export interface ApiErrorResponse {
 // ============================================================================
 
 export interface SessionInfo {
+  authMode: 'obo' | 'client_credentials';
   isAuthenticated: boolean;
   expiresAt?: number;
   hasWebhookSubscription: boolean;

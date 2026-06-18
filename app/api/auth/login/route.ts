@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session';
 import { generateCodeChallenge, generateCodeVerifier, generateState } from '@/lib/pkce';
 import { env } from '@/lib/env';
 import { logError } from '@/lib/logger';
+import { isClientCredentialsMode } from '@/lib/document-api-auth';
 
 /**
  * GET /api/auth/login
@@ -11,6 +12,10 @@ import { logError } from '@/lib/logger';
  */
 export async function GET(_request: NextRequest) {
   try {
+    if (isClientCredentialsMode()) {
+      return NextResponse.redirect(new URL('/dashboard', _request.url));
+    }
+
     const session = await getSession();
 
     // Generate PKCE parameters
@@ -29,6 +34,10 @@ export async function GET(_request: NextRequest) {
     const clientId = env.AZURE_CLIENT_ID;
     const redirectUri = env.AZURE_REDIRECT_URI;
     const documentApiAppId = env.DOCUMENT_API_APP_ID;
+
+    if (!clientId || !redirectUri || !documentApiAppId) {
+      throw new Error('OBO authentication is not fully configured');
+    }
 
     const authUrl = new URL(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`);
 
