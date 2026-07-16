@@ -8,10 +8,94 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import type { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse } from '@/lib/types';
+import type {
+  AvailabilityCheckResponse,
+  DocumentInfo,
+  PurchaseRequest,
+  PurchaseResponse,
+} from '@/lib/types';
 import { formatTokens, formatDate } from '@/lib/utils';
 import { addOrderToHistory } from '@/lib/order-history';
 import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide-react';
+
+function DocumentRow({
+  doc,
+  selected,
+  onToggle,
+  onDownload,
+  contextNote,
+}: {
+  doc: DocumentInfo;
+  selected: boolean;
+  onToggle: () => void;
+  onDownload: (documentId: string) => void;
+  contextNote?: string;
+}) {
+  const selectable = doc.availability_code === 'IMMEDIATE' || doc.availability_code === 'BACKDATED';
+
+  return (
+    <div
+      className={`flex items-start justify-between p-4 border rounded-lg ${
+        selectable ? 'cursor-pointer hover:bg-gray-50' : 'opacity-75'
+      }`}
+      onClick={selectable ? onToggle : undefined}
+    >
+      <div className="flex items-start gap-3">
+        {selectable && (
+          <div className="mt-1">
+            <div
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                selected ? 'bg-primary border-primary' : 'border-gray-300'
+              }`}
+            >
+              {selected && <Check className="h-3 w-3 text-white" />}
+            </div>
+          </div>
+        )}
+        <div>
+          <h4 className="font-semibold">{doc.type}</h4>
+          <p className="text-sm text-muted-foreground">{doc.availability}</p>
+          {contextNote && <p className="text-xs text-muted-foreground mt-1">{contextNote}</p>}
+          {(doc.previously_purchased || doc.document_id) && (
+            <div className="flex items-center gap-2 flex-wrap mt-1">
+              {doc.previously_purchased && (
+                <Badge variant="outline">
+                  Previously purchased: {formatDate(doc.previously_purchased)}
+                </Badge>
+              )}
+              {doc.document_id && (
+                <button
+                  className="inline-flex items-center gap-1 rounded-full border border-primary px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload(doc.document_id!);
+                  }}
+                >
+                  <Download className="h-3 w-3" />
+                  Re-download
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="text-right">
+        {selectable ? (
+          <p className="font-semibold">{formatTokens(doc.token_cost)}</p>
+        ) : (
+          <Badge variant="secondary">
+            {doc.availability_code === 'MANUAL' ? 'Manual request required' : 'Not available'}
+          </Badge>
+        )}
+        {doc.backdated && (
+          <Badge variant="warning" className="mt-1">
+            Backdated
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const [titleNumber, setTitleNumber] = useState('');
@@ -156,9 +240,14 @@ export default function DashboardPage() {
       return;
     }
 
+    const docs = getSelectableDocuments();
     purchaseMutation.mutate({
       title_number: titleNumber,
-      documents: selectedDocs,
+      // 'register'/'title_plan' are sent as-is (see README purchase example); referred
+      // documents have no such fixed slot name, so translate their positional key to type_code.
+      documents: selectedDocs.map((key) =>
+        key === 'register' || key === 'title_plan' ? key : (docs[key]?.type_code ?? key)
+      ),
       customer_reference: customerRef || undefined,
     });
   };
@@ -192,16 +281,25 @@ export default function DashboardPage() {
     });
   };
 
+  // Referred documents aren't uniquely identified by type_code (e.g. two separate
+  // "Lease" entries can both refer to the same title), so each row gets a positional
+  // key here and is translated back to its type_code only when building the purchase request.
+  const referredDocKey = (index: number) => `referred-${index}`;
+
+  const getSelectableDocuments = (): Record<string, DocumentInfo> => {
+    if (!availability) return {};
+    const docs: Record<string, DocumentInfo> = {};
+    if (availability.data.register) docs.register = availability.data.register;
+    if (availability.data.title_plan) docs.title_plan = availability.data.title_plan;
+    availability.data.referred_to_documents.forEach((doc, index) => {
+      docs[referredDocKey(index)] = doc;
+    });
+    return docs;
+  };
+
   const calculateTotalCost = () => {
-    if (!availability) return 0;
-    let total = 0;
-    if (selectedDocs.includes('register') && availability.data.register) {
-      total += availability.data.register.token_cost;
-    }
-    if (selectedDocs.includes('title_plan') && availability.data.title_plan) {
-      total += availability.data.title_plan.token_cost;
-    }
-    return total;
+    const docs = getSelectableDocuments();
+    return selectedDocs.reduce((total, key) => total + (docs[key]?.token_cost ?? 0), 0);
   };
 
   const hasInsufficientBalance =
@@ -371,128 +469,22 @@ export default function DashboardPage() {
             <CardContent className="space-y-4">
               {/* Register */}
               {availability.data.register && (
-                <div
-                  className="flex items-start justify-between p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-                  onClick={() => toggleDocSelection('register')}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1">
-                      <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                          selectedDocs.includes('register')
-                            ? 'bg-primary border-primary'
-                            : 'border-gray-300'
-                        }`}
-                      >
-                        {selectedDocs.includes('register') && (
-                          <Check className="h-3 w-3 text-white" />
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">{availability.data.register.type}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {availability.data.register.availability}
-                      </p>
-                      {(availability.data.register.previously_purchased ||
-                        availability.data.register.document_id) && (
-                        <div className="flex items-center gap-2 flex-wrap mt-1">
-                          {availability.data.register.previously_purchased && (
-                            <Badge variant="outline">
-                              Previously purchased:{' '}
-                              {formatDate(availability.data.register.previously_purchased)}
-                            </Badge>
-                          )}
-                          {availability.data.register.document_id && (
-                            <button
-                              className="inline-flex items-center gap-1 rounded-full border border-primary px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDownload(availability.data.register!.document_id!);
-                              }}
-                            >
-                              <Download className="h-3 w-3" />
-                              Re-download
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      {formatTokens(availability.data.register.token_cost)}
-                    </p>
-                    {availability.data.register.backdated && (
-                      <Badge variant="warning" className="mt-1">
-                        Backdated
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+                <DocumentRow
+                  doc={availability.data.register}
+                  selected={selectedDocs.includes('register')}
+                  onToggle={() => toggleDocSelection('register')}
+                  onDownload={handleDownload}
+                />
               )}
 
               {/* Title Plan */}
               {availability.data.title_plan && (
-                <div
-                  className="flex items-start justify-between p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-                  onClick={() => toggleDocSelection('title_plan')}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1">
-                      <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                          selectedDocs.includes('title_plan')
-                            ? 'bg-primary border-primary'
-                            : 'border-gray-300'
-                        }`}
-                      >
-                        {selectedDocs.includes('title_plan') && (
-                          <Check className="h-3 w-3 text-white" />
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">{availability.data.title_plan.type}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {availability.data.title_plan.availability}
-                      </p>
-                      {(availability.data.title_plan.previously_purchased ||
-                        availability.data.title_plan.document_id) && (
-                        <div className="flex items-center gap-2 flex-wrap mt-1">
-                          {availability.data.title_plan.previously_purchased && (
-                            <Badge variant="outline">
-                              Previously purchased:{' '}
-                              {formatDate(availability.data.title_plan.previously_purchased)}
-                            </Badge>
-                          )}
-                          {availability.data.title_plan.document_id && (
-                            <button
-                              className="inline-flex items-center gap-1 rounded-full border border-primary px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDownload(availability.data.title_plan!.document_id!);
-                              }}
-                            >
-                              <Download className="h-3 w-3" />
-                              Re-download
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      {formatTokens(availability.data.title_plan.token_cost)}
-                    </p>
-                    {availability.data.title_plan.backdated && (
-                      <Badge variant="warning" className="mt-1">
-                        Backdated
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+                <DocumentRow
+                  doc={availability.data.title_plan}
+                  selected={selectedDocs.includes('title_plan')}
+                  onToggle={() => toggleDocSelection('title_plan')}
+                  onDownload={handleDownload}
+                />
               )}
 
               {/* Purchase Section */}
@@ -532,6 +524,39 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Documents Referred to in the Register */}
+          {availability.data.referred_to_documents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Documents Referred To in the Register</CardTitle>
+                <CardDescription>
+                  These documents are referenced by entries in the register. Some can be
+                  purchased directly; others require a manual request.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {availability.data.referred_to_documents.map((doc, index) => {
+                  const contextParts = [];
+                  if (doc.filed_under) contextParts.push(`Filed under: ${doc.filed_under}`);
+                  if (doc.entry_numbers?.length) {
+                    contextParts.push(`Entry ${doc.entry_numbers.join(', ')}`);
+                  }
+                  const key = referredDocKey(index);
+                  return (
+                    <DocumentRow
+                      key={key}
+                      doc={doc}
+                      selected={selectedDocs.includes(key)}
+                      onToggle={() => toggleDocSelection(key)}
+                      onDownload={handleDownload}
+                      contextNote={contextParts.length ? contextParts.join(' • ') : undefined}
+                    />
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Pending Applications */}
           {availability.data.pending_applications.length > 0 && (
