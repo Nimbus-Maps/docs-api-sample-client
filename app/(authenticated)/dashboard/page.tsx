@@ -394,7 +394,8 @@ export default function DashboardPage() {
                       <p className="text-sm text-muted-foreground">
                         {availability.data.register.availability}
                       </p>
-                      {(availability.data.register.previously_purchased || availability.data.register.document_id) && (
+                      {(availability.data.register.previously_purchased ||
+                        availability.data.register.document_id) && (
                         <div className="flex items-center gap-2 flex-wrap mt-1">
                           {availability.data.register.previously_purchased && (
                             <Badge variant="outline">
@@ -456,7 +457,8 @@ export default function DashboardPage() {
                       <p className="text-sm text-muted-foreground">
                         {availability.data.title_plan.availability}
                       </p>
-                      {(availability.data.title_plan.previously_purchased || availability.data.title_plan.document_id) && (
+                      {(availability.data.title_plan.previously_purchased ||
+                        availability.data.title_plan.document_id) && (
                         <div className="flex items-center gap-2 flex-wrap mt-1">
                           {availability.data.title_plan.previously_purchased && (
                             <Badge variant="outline">
