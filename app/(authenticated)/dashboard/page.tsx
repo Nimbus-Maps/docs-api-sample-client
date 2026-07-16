@@ -11,13 +11,34 @@ import { toast } from 'sonner';
 import type { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse } from '@/lib/types';
 import { formatTokens, formatDate } from '@/lib/utils';
 import { addOrderToHistory } from '@/lib/order-history';
-import { Search, ShoppingCart, Check, AlertCircle, Info } from 'lucide-react';
+import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide-react';
 
 export default function DashboardPage() {
   const [titleNumber, setTitleNumber] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [customerRef, setCustomerRef] = useState('');
   const [lastPurchasedOrder, setLastPurchasedOrder] = useState<string | null>(null);
+
+  const handleDownload = async (documentId: string) => {
+    try {
+      const res = await fetch(`/api/download/${documentId}`);
+      if (!res.ok) {
+        throw new Error('Failed to download document');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `document-${documentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Document downloaded successfully');
+    } catch {
+      toast.error('Failed to download document');
+    }
+  };
 
   // Quick purchase form state
   const [quickTitleNumber, setQuickTitleNumber] = useState('');
@@ -379,6 +400,20 @@ export default function DashboardPage() {
                           {formatDate(availability.data.register.previously_purchased)}
                         </Badge>
                       )}
+                      {availability.data.register.document_id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(availability.data.register!.document_id!);
+                          }}
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          Re-download
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
@@ -424,6 +459,20 @@ export default function DashboardPage() {
                           Previously purchased:{' '}
                           {formatDate(availability.data.title_plan.previously_purchased)}
                         </Badge>
+                      )}
+                      {availability.data.title_plan.document_id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(availability.data.title_plan!.document_id!);
+                          }}
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          Re-download
+                        </Button>
                       )}
                     </div>
                   </div>

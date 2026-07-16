@@ -15,6 +15,7 @@ export interface DocumentInfo {
   backdated?: boolean;
   token_cost: number;
   previously_purchased?: string | null;
+  document_id?: string | null;
   entry_numbers?: string[];
   date?: string;
   filed_under?: string | null;
