@@ -531,8 +531,8 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle>Documents Referred To in the Register</CardTitle>
                 <CardDescription>
-                  These documents are referenced by entries in the register. Some can be
-                  purchased directly; others require a manual request.
+                  These documents are referenced by entries in the register. Some can be purchased
+                  directly; others require a manual request.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
