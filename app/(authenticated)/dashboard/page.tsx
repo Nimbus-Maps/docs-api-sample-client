@@ -11,13 +11,34 @@ import { toast } from 'sonner';
 import type { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse } from '@/lib/types';
 import { formatTokens, formatDate } from '@/lib/utils';
 import { addOrderToHistory } from '@/lib/order-history';
-import { Search, ShoppingCart, Check, AlertCircle, Info } from 'lucide-react';
+import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide-react';
 
 export default function DashboardPage() {
   const [titleNumber, setTitleNumber] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [customerRef, setCustomerRef] = useState('');
   const [lastPurchasedOrder, setLastPurchasedOrder] = useState<string | null>(null);
+
+  const handleDownload = async (documentId: string) => {
+    try {
+      const res = await fetch(`/api/download/${documentId}`);
+      if (!res.ok) {
+        throw new Error('Failed to download document');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `document-${documentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Document downloaded successfully');
+    } catch {
+      toast.error('Failed to download document');
+    }
+  };
 
   // Quick purchase form state
   const [quickTitleNumber, setQuickTitleNumber] = useState('');
@@ -373,11 +394,28 @@ export default function DashboardPage() {
                       <p className="text-sm text-muted-foreground">
                         {availability.data.register.availability}
                       </p>
-                      {availability.data.register.previously_purchased && (
-                        <Badge variant="outline" className="mt-1">
-                          Previously purchased:{' '}
-                          {formatDate(availability.data.register.previously_purchased)}
-                        </Badge>
+                      {(availability.data.register.previously_purchased ||
+                        availability.data.register.document_id) && (
+                        <div className="flex items-center gap-2 flex-wrap mt-1">
+                          {availability.data.register.previously_purchased && (
+                            <Badge variant="outline">
+                              Previously purchased:{' '}
+                              {formatDate(availability.data.register.previously_purchased)}
+                            </Badge>
+                          )}
+                          {availability.data.register.document_id && (
+                            <button
+                              className="inline-flex items-center gap-1 rounded-full border border-primary px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload(availability.data.register!.document_id!);
+                              }}
+                            >
+                              <Download className="h-3 w-3" />
+                              Re-download
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -419,11 +457,28 @@ export default function DashboardPage() {
                       <p className="text-sm text-muted-foreground">
                         {availability.data.title_plan.availability}
                       </p>
-                      {availability.data.title_plan.previously_purchased && (
-                        <Badge variant="outline" className="mt-1">
-                          Previously purchased:{' '}
-                          {formatDate(availability.data.title_plan.previously_purchased)}
-                        </Badge>
+                      {(availability.data.title_plan.previously_purchased ||
+                        availability.data.title_plan.document_id) && (
+                        <div className="flex items-center gap-2 flex-wrap mt-1">
+                          {availability.data.title_plan.previously_purchased && (
+                            <Badge variant="outline">
+                              Previously purchased:{' '}
+                              {formatDate(availability.data.title_plan.previously_purchased)}
+                            </Badge>
+                          )}
+                          {availability.data.title_plan.document_id && (
+                            <button
+                              className="inline-flex items-center gap-1 rounded-full border border-primary px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload(availability.data.title_plan!.document_id!);
+                              }}
+                            >
+                              <Download className="h-3 w-3" />
+                              Re-download
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
