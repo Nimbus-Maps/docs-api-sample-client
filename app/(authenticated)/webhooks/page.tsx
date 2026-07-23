@@ -165,6 +165,18 @@ function EventsTab() {
                   </p>
                 </div>
                 <div>
+                  <p className="text-sm text-muted-foreground">Order ID</p>
+                  <p className="font-semibold font-mono text-xs break-all">
+                    {event.payload.Data?.OrderId ?? 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Document Type</p>
+                  <p className="font-semibold">
+                    {event.payload.Data?.DocumentTypeId ?? 'N/A'}
+                  </p>
+                </div>
+                <div>
                   <p className="text-sm text-muted-foreground">Document</p>
                   <p className="font-semibold">
                     {event.payload.Data?.DocumentDescription ?? 'N/A'}
