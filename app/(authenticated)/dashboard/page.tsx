@@ -8,7 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import type { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse, ReferredDocumentPurchaseItem } from '@/lib/types';
+import type {
+  AvailabilityCheckResponse,
+  PurchaseRequest,
+  PurchaseResponse,
+  ReferredDocumentPurchaseItem,
+} from '@/lib/types';
 import { formatTokens, formatDate } from '@/lib/utils';
 import { addOrderToHistory } from '@/lib/order-history';
 import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide-react';
@@ -16,7 +21,9 @@ import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide
 export default function DashboardPage() {
   const [titleNumber, setTitleNumber] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
-  const [selectedReferredDocs, setSelectedReferredDocs] = useState<ReferredDocumentPurchaseItem[]>([]);
+  const [selectedReferredDocs, setSelectedReferredDocs] = useState<ReferredDocumentPurchaseItem[]>(
+    []
+  );
   const [customerRef, setCustomerRef] = useState('');
   const [lastPurchasedOrder, setLastPurchasedOrder] = useState<string | null>(null);
 
@@ -166,12 +173,24 @@ export default function DashboardPage() {
     });
   };
 
-  const referredDocKey = (doc: { type_code: string; date?: string | null; filed_under?: string | null }) =>
-    `${doc.type_code}|${doc.date ?? ''}|${doc.filed_under ?? ''}`;
+  const referredDocKey = (doc: {
+    type_code: string;
+    date?: string | null;
+    filed_under?: string | null;
+  }) => `${doc.type_code}|${doc.date ?? ''}|${doc.filed_under ?? ''}`;
 
-  const toggleReferredDocSelection = (doc: { type_code: string; date?: string | null; filed_under?: string | null; token_cost: number }) => {
+  const toggleReferredDocSelection = (doc: {
+    type_code: string;
+    date?: string | null;
+    filed_under?: string | null;
+    token_cost: number;
+  }) => {
     if (!doc.date || !doc.filed_under) return;
-    const item: ReferredDocumentPurchaseItem = { type_code: doc.type_code, date: doc.date, filed_under: doc.filed_under };
+    const item: ReferredDocumentPurchaseItem = {
+      type_code: doc.type_code,
+      date: doc.date,
+      filed_under: doc.filed_under,
+    };
     const key = referredDocKey(item);
     setSelectedReferredDocs((prev) =>
       prev.some((d) => referredDocKey(d) === key)
@@ -220,7 +239,9 @@ export default function DashboardPage() {
     }
     availability.data.referred_to_documents
       .filter((doc) => selectedReferredDocs.some((s) => referredDocKey(s) === referredDocKey(doc)))
-      .forEach((doc) => { total += doc.token_cost; });
+      .forEach((doc) => {
+        total += doc.token_cost;
+      });
     return total;
   };
 
@@ -516,15 +537,21 @@ export default function DashboardPage() {
               )}
 
               {/* Referred Documents */}
-              {availability.data.referred_to_documents.filter((doc) => doc.availability_code === 'IMMEDIATE').length > 0 && (
+              {availability.data.referred_to_documents.filter(
+                (doc) => doc.availability_code === 'IMMEDIATE'
+              ).length > 0 && (
                 <div className="pt-2">
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-2">Referred Documents</h4>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                    Referred Documents
+                  </h4>
                   <div className="space-y-2">
                     {availability.data.referred_to_documents
                       .filter((doc) => doc.availability_code === 'IMMEDIATE')
                       .map((doc, idx) => {
                         const key = referredDocKey(doc);
-                        const isSelected = selectedReferredDocs.some((s) => referredDocKey(s) === key);
+                        const isSelected = selectedReferredDocs.some(
+                          (s) => referredDocKey(s) === key
+                        );
                         return (
                           <div
                             key={idx}
