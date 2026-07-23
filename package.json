@@ -7,8 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "next lint --dir .",
+    "lint:fix": "next lint --dir . --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
@@ -59,7 +59,7 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "msw": "^2.7.0",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.10",
     "prettier": "^3.4.2",
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.2.5",
@@ -68,5 +68,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "overrides": {
+    "sharp": ">=0.35.0"
   }
 }
