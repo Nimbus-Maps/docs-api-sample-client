@@ -127,7 +127,9 @@ export interface WebhookSubscriptionResponse {
 
 export interface WebhookEventData {
   Reference: string;
+  OrderId: string | null;
   TitleNumber: string;
+  DocumentTypeId: string | null;
   DocumentDescription: string | null;
   PreviousStatus: number;
   NewStatus: number;
