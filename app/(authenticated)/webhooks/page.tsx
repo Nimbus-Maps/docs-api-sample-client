@@ -172,9 +172,7 @@ function EventsTab() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Document Type</p>
-                  <p className="font-semibold">
-                    {event.payload.Data?.DocumentTypeId ?? 'N/A'}
-                  </p>
+                  <p className="font-semibold">{event.payload.Data?.DocumentTypeId ?? 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Document</p>
