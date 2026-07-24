@@ -19,9 +19,17 @@ export async function POST(request: NextRequest) {
     const body: PurchaseRequest = await request.json();
 
     // Validate request body
-    if (!body.title_number || !body.documents || body.documents.length === 0) {
+    const hasDocuments = body.documents && body.documents.length > 0;
+    const hasReferredDocuments = body.referred_documents && body.referred_documents.length > 0;
+    if (!body.title_number || (!hasDocuments && !hasReferredDocuments)) {
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'title_number and documents are required' } },
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message:
+              'title_number and at least one of documents or referred_documents are required',
+          },
+        },
         { status: 400 }
       );
     }

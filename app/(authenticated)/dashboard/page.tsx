@@ -8,7 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import type { AvailabilityCheckResponse, PurchaseRequest, PurchaseResponse } from '@/lib/types';
+import type {
+  AvailabilityCheckResponse,
+  PurchaseRequest,
+  PurchaseResponse,
+  ReferredDocumentPurchaseItem,
+} from '@/lib/types';
 import { formatTokens, formatDate } from '@/lib/utils';
 import { addOrderToHistory } from '@/lib/order-history';
 import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide-react';
@@ -16,6 +21,9 @@ import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide
 export default function DashboardPage() {
   const [titleNumber, setTitleNumber] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [selectedReferredDocs, setSelectedReferredDocs] = useState<ReferredDocumentPurchaseItem[]>(
+    []
+  );
   const [customerRef, setCustomerRef] = useState('');
   const [lastPurchasedOrder, setLastPurchasedOrder] = useState<string | null>(null);
 
@@ -87,6 +95,7 @@ export default function DashboardPage() {
         createdAt: new Date().toISOString(),
       });
       setSelectedDocs([]);
+      setSelectedReferredDocs([]);
       setCustomerRef('');
     },
     onError: (error) => {
@@ -151,16 +160,43 @@ export default function DashboardPage() {
   };
 
   const handlePurchase = () => {
-    if (selectedDocs.length === 0) {
+    if (selectedDocs.length === 0 && selectedReferredDocs.length === 0) {
       toast.error('Please select at least one document');
       return;
     }
 
     purchaseMutation.mutate({
       title_number: titleNumber,
-      documents: selectedDocs,
+      documents: selectedDocs.length > 0 ? selectedDocs : undefined,
+      referred_documents: selectedReferredDocs.length > 0 ? selectedReferredDocs : undefined,
       customer_reference: customerRef || undefined,
     });
+  };
+
+  const referredDocKey = (doc: {
+    type_code: string;
+    date?: string | null;
+    filed_under?: string | null;
+  }) => `${doc.type_code}|${doc.date ?? ''}|${doc.filed_under ?? ''}`;
+
+  const toggleReferredDocSelection = (doc: {
+    type_code: string;
+    date?: string | null;
+    filed_under?: string | null;
+    token_cost: number;
+  }) => {
+    if (!doc.date || !doc.filed_under) return;
+    const item: ReferredDocumentPurchaseItem = {
+      type_code: doc.type_code,
+      date: doc.date,
+      filed_under: doc.filed_under,
+    };
+    const key = referredDocKey(item);
+    setSelectedReferredDocs((prev) =>
+      prev.some((d) => referredDocKey(d) === key)
+        ? prev.filter((d) => referredDocKey(d) !== key)
+        : [...prev, item]
+    );
   };
 
   const toggleDocSelection = (docType: string) => {
@@ -201,6 +237,11 @@ export default function DashboardPage() {
     if (selectedDocs.includes('title_plan') && availability.data.title_plan) {
       total += availability.data.title_plan.token_cost;
     }
+    availability.data.referred_to_documents
+      .filter((doc) => selectedReferredDocs.some((s) => referredDocKey(s) === referredDocKey(doc)))
+      .forEach((doc) => {
+        total += doc.token_cost;
+      });
     return total;
   };
 
@@ -495,8 +536,57 @@ export default function DashboardPage() {
                 </div>
               )}
 
+              {/* Referred Documents */}
+              {availability.data.referred_to_documents.filter(
+                (doc) => doc.availability_code === 'IMMEDIATE'
+              ).length > 0 && (
+                <div className="pt-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                    Referred Documents
+                  </h4>
+                  <div className="space-y-2">
+                    {availability.data.referred_to_documents
+                      .filter((doc) => doc.availability_code === 'IMMEDIATE')
+                      .map((doc, idx) => {
+                        const key = referredDocKey(doc);
+                        const isSelected = selectedReferredDocs.some(
+                          (s) => referredDocKey(s) === key
+                        );
+                        return (
+                          <div
+                            key={idx}
+                            className="flex items-start justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                            onClick={() => toggleReferredDocSelection(doc)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5">
+                                <div
+                                  className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                    isSelected ? 'bg-primary border-primary' : 'border-gray-300'
+                                  }`}
+                                >
+                                  {isSelected && <Check className="h-3 w-3 text-white" />}
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-sm">
+                                  {doc.type} — {doc.entry_numbers?.join(', ')}
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  {doc.date} · filed under {doc.filed_under}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="font-semibold text-sm">{formatTokens(doc.token_cost)}</p>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
               {/* Purchase Section */}
-              {selectedDocs.length > 0 && (
+              {(selectedDocs.length > 0 || selectedReferredDocs.length > 0) && (
                 <div className="pt-4 border-t space-y-4">
                   <div>
                     <Label htmlFor="customer-ref">Customer Reference (Optional)</Label>

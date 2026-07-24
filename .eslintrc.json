@@ -21,5 +21,13 @@
     "react-hooks/exhaustive-deps": "warn",
     "react/no-unescaped-entities": "off"
   },
-  "ignorePatterns": ["node_modules/", ".next/", "out/", "coverage/", "*.config.js", "*.config.ts"]
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "coverage/",
+    "*.config.js",
+    "*.config.ts",
+    "next-env.d.ts"
+  ]
 }

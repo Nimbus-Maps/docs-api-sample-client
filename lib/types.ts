@@ -55,9 +55,16 @@ export interface AvailabilityCheckResponse {
 // Purchase Types
 // ============================================================================
 
+export interface ReferredDocumentPurchaseItem {
+  type_code: string;
+  date: string;
+  filed_under: string;
+}
+
 export interface PurchaseRequest {
   title_number: string;
-  documents: string[];
+  documents?: string[];
+  referred_documents?: ReferredDocumentPurchaseItem[];
   customer_reference?: string;
 }
 
@@ -66,6 +73,7 @@ export interface PurchaseResponse {
   status: OrderStatus;
   title_number: string;
   documents_ordered: string[];
+  referred_documents_ordered?: ReferredDocumentPurchaseItem[];
   total_tokens_charged: number;
   new_balance: number;
   estimated_delivery: string;
