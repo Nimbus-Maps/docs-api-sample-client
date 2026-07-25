@@ -16,6 +16,7 @@ import { Search, ShoppingCart, Check, AlertCircle, Info, Download } from 'lucide
 export default function DashboardPage() {
   const [titleNumber, setTitleNumber] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [selectedReferredIndexes, setSelectedReferredIndexes] = useState<number[]>([]);
   const [customerRef, setCustomerRef] = useState('');
   const [lastPurchasedOrder, setLastPurchasedOrder] = useState<string | null>(null);
 
@@ -87,6 +88,7 @@ export default function DashboardPage() {
         createdAt: new Date().toISOString(),
       });
       setSelectedDocs([]);
+      setSelectedReferredIndexes([]);
       setCustomerRef('');
     },
     onError: (error) => {
@@ -151,14 +153,24 @@ export default function DashboardPage() {
   };
 
   const handlePurchase = () => {
-    if (selectedDocs.length === 0) {
+    if (selectedDocs.length === 0 && selectedReferredIndexes.length === 0) {
       toast.error('Please select at least one document');
       return;
     }
 
+    const referredDocuments = selectedReferredIndexes
+      .map((idx) => availability?.data.referred_to_documents[idx])
+      .filter((doc): doc is NonNullable<typeof doc> => doc !== undefined)
+      .map((doc) => ({
+        type_code: doc.type_code,
+        date: doc.date ?? '',
+        filed_under: doc.filed_under ?? '',
+      }));
+
     purchaseMutation.mutate({
       title_number: titleNumber,
-      documents: selectedDocs,
+      documents: selectedDocs.length > 0 ? selectedDocs : undefined,
+      referred_documents: referredDocuments.length > 0 ? referredDocuments : undefined,
       customer_reference: customerRef || undefined,
     });
   };
@@ -166,6 +178,12 @@ export default function DashboardPage() {
   const toggleDocSelection = (docType: string) => {
     setSelectedDocs((prev) =>
       prev.includes(docType) ? prev.filter((d) => d !== docType) : [...prev, docType]
+    );
+  };
+
+  const toggleReferredDocSelection = (idx: number) => {
+    setSelectedReferredIndexes((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
     );
   };
 
@@ -201,6 +219,10 @@ export default function DashboardPage() {
     if (selectedDocs.includes('title_plan') && availability.data.title_plan) {
       total += availability.data.title_plan.token_cost;
     }
+    selectedReferredIndexes.forEach((idx) => {
+      const doc = availability.data.referred_to_documents[idx];
+      if (doc) total += doc.token_cost;
+    });
     return total;
   };
 
@@ -495,8 +517,81 @@ export default function DashboardPage() {
                 </div>
               )}
 
+              {/* Referred Documents */}
+              {availability.data.referred_to_documents.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Referred Documents
+                  </p>
+                  <div className="space-y-4">
+                    {availability.data.referred_to_documents.map((doc, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start justify-between p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
+                        onClick={() => toggleReferredDocSelection(idx)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1">
+                            <div
+                              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                selectedReferredIndexes.includes(idx)
+                                  ? 'bg-primary border-primary'
+                                  : 'border-gray-300'
+                              }`}
+                            >
+                              {selectedReferredIndexes.includes(idx) && (
+                                <Check className="h-3 w-3 text-white" />
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">{doc.type}</h4>
+                            <p className="text-sm text-muted-foreground">{doc.availability}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {doc.date} • Filed under {doc.filed_under}
+                              {doc.entry_numbers && doc.entry_numbers.length > 0 && (
+                                <> • Entry {doc.entry_numbers.join(', ')}</>
+                              )}
+                            </p>
+                            {(doc.previously_purchased || doc.document_id) && (
+                              <div className="flex items-center gap-2 flex-wrap mt-1">
+                                {doc.previously_purchased && (
+                                  <Badge variant="outline">
+                                    Previously purchased: {formatDate(doc.previously_purchased)}
+                                  </Badge>
+                                )}
+                                {doc.document_id && (
+                                  <button
+                                    className="inline-flex items-center gap-1 rounded-full border border-primary px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownload(doc.document_id!);
+                                    }}
+                                  >
+                                    <Download className="h-3 w-3" />
+                                    Re-download
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{formatTokens(doc.token_cost)}</p>
+                          {doc.plan_only && (
+                            <Badge variant="warning" className="mt-1">
+                              Plan only
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Purchase Section */}
-              {selectedDocs.length > 0 && (
+              {(selectedDocs.length > 0 || selectedReferredIndexes.length > 0) && (
                 <div className="pt-4 border-t space-y-4">
                   <div>
                     <Label htmlFor="customer-ref">Customer Reference (Optional)</Label>

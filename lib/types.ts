@@ -55,9 +55,16 @@ export interface AvailabilityCheckResponse {
 // Purchase Types
 // ============================================================================
 
+export interface ReferredDocumentPurchaseItem {
+  type_code: string;
+  date: string;
+  filed_under: string;
+}
+
 export interface PurchaseRequest {
   title_number: string;
-  documents: string[];
+  documents?: string[];
+  referred_documents?: ReferredDocumentPurchaseItem[];
   customer_reference?: string;
 }
 
