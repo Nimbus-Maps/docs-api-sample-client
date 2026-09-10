@@ -276,7 +276,7 @@ export default function DashboardPage() {
                   placeholder="e.g., AB123456"
                   value={titleNumber}
                   onChange={(e) => setTitleNumber(e.target.value.toUpperCase())}
-                  pattern="[A-Z]{1,3}[0-9]{1,7}"
+                  pattern="[A-Z]{0,3}[0-9]{1,7}"
                   className="uppercase"
                 />
               </div>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                 placeholder="e.g., AB123456"
                 value={quickTitleNumber}
                 onChange={(e) => setQuickTitleNumber(e.target.value.toUpperCase())}
-                pattern="[A-Z]{1,3}[0-9]{1,7}"
+                pattern="[A-Z]{0,3}[0-9]{1,7}"
                 className="uppercase"
               />
             </div>
