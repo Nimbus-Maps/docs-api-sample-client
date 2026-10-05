@@ -330,7 +330,7 @@ export default function DashboardPage() {
                     onClick={() => toggleQuickDocSelection(id)}
                   >
                     <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
                         quickSelectedDocs.includes(id)
                           ? 'bg-primary border-primary'
                           : 'border-gray-300'
